@@ -34,6 +34,6 @@ fn detect(path: String) {
     for file in lsdir {
         //file type finder logic goes here
         let ind_file: String = file.unwrap().file_name().into_string().unwrap().to_owned(); //colorize ts
-        println!("{}", ind_file);
+        println!("{}", ind_file); //aww
     }
 }
