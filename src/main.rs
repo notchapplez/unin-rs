@@ -1,19 +1,21 @@
-mod c;
-
 use colored::Colorize;
-use std::os::unix::fs::PermissionsExt;
-use std::{env, fs, path::PathBuf, process::{Command, Stdio}};
-use std::thread::sleep;
-use std::time::Duration;
 use spinners::Spinner;
 use spinners::Spinners::Dots;
+use std::os::unix::fs::PermissionsExt;
+use std::thread::sleep;
+use std::time::Duration;
+use std::{
+    env, fs,
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 fn main() {
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
     let args_string = format!("Current arguments given are {:?}", args);
     println!("{}", args_string.yellow());
-    if args.len() == 0 {
+    if args.is_empty() {
         let cwd = env::current_dir().unwrap();
         args = vec![cwd.into_os_string().into_string().unwrap()];
         println!("Fixed empty args to {:?}\n", args);
@@ -37,6 +39,7 @@ fn detect(path: String) {
         let filename = os_filename.into_string().unwrap();
         match filename.as_str() {
             "Cargo.toml" => compile_rust(PathBuf::from(&path)),
+            "CMakeLists.txt" => todo!(),
             _ => {}
         }
     }
@@ -45,7 +48,6 @@ fn compile_rust(directory: PathBuf) {
     println!("Now compiling {}", directory.to_str().unwrap().yellow());
 
     let mut sp = Spinner::new(Dots, "Compiling... Hang on, this can take up to 10 minutes depending on the hardware and complexity of the application being compiled.".into());
-
 
     let mut child = Command::new("cargo") //compile the stuff
         .args(["build", "--release"])
@@ -108,7 +110,7 @@ fn find_files_because_the_user_is_too_lazy(directory: PathBuf) -> Vec<PathBuf> {
 fn install_to_bin_as_sudo_because_the_fucking_user_didnt_supply_sudo(executables: Vec<PathBuf>) {
     for binary in executables {
         let filename = binary.file_name().unwrap().to_str().unwrap().to_owned();
-        let destination = format!("/usr/bin/{}", filename.to_string());
+        let destination = format!("/usr/bin/{}", filename);
 
         let clean = Command::new("sudo")
             .arg("rm")
