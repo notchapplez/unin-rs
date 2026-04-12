@@ -5,4 +5,6 @@ edition = "2024"
 
 [dependencies]
 colored = "3.1.1"
+libc = "0.2.184"
 owo-colors = "4.3.0"
+spinners = "4.2.0"
