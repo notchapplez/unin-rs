@@ -25,7 +25,7 @@ struct Cli {
     )]
     path: PathBuf,
 
-    #[arg(long)]
+    #[arg(long, default_value = "false", help = "Skip the install step")]
     noinstall: bool,
 }
 
@@ -34,6 +34,7 @@ enum SetupMode {
     Full,
     Rust,
     Cmake,
+    Make,
     Go,
     Zig,
     Swift,
@@ -50,6 +51,7 @@ fn main() {
             SetupMode::Full => installer::setup_files_full(),
             SetupMode::Rust => installer::setup_files_lang("rust".to_owned()),
             SetupMode::Cmake => installer::setup_files_lang("cmake".to_owned()),
+            SetupMode::Make => installer::setup_files_lang("make".to_owned()),
             SetupMode::Go => installer::setup_files_lang("go".to_owned()),
             SetupMode::Zig => installer::setup_files_lang("zig".to_owned()),
             SetupMode::Swift => installer::setup_files_lang("swift".to_owned()),

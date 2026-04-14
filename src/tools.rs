@@ -22,6 +22,7 @@ pub fn detect(path: String, noinstall: bool) {
         match filename.as_str() {
             "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
             "CMakeLists.txt" => compile_cmake(PathBuf::from(&path), noinstall),
+            "Makefile" => todo!(),
             _ => {}
         }
     }

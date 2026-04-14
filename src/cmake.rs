@@ -6,9 +6,11 @@ use std::{
     fs as filesystem, path::{Path, PathBuf}, process as commands, process::Stdio, thread as sleeping,
     time::Duration,
 };
+use std::io::BufRead;
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
-    println!("Now compiling {}", directory.to_str().unwrap().yellow());
+    let build_dir: PathBuf = PathBuf::from(format!("{}/build", directory.to_str().unwrap()));
+    println!("Now configuring {}", directory.to_str().unwrap().yellow());
     let cmake_lists_path = format!("{}/CMakeLists.txt", directory.to_str().unwrap());
 
     let cmake_lists: PathBuf = PathBuf::from(&cmake_lists_path);
@@ -54,7 +56,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             let old_args = filesystem::read_to_string(&arguments_history).unwrap();
             configure(old_args.split(" ").collect(), &directory);
 
-            //put make here todo!()
+            make(directory,build_dir, noinstall);
         } else {
             let input: String = Input::new()
                 .allow_empty(true)
@@ -68,7 +70,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             filesystem::remove_file(&arguments_history).unwrap();
             filesystem::write(arguments_history, full_cmake_input.clone()).unwrap();
 
-            //put make here todo!()
+            make(directory, build_dir, noinstall);
         }
     } else {
         let input: String = Input::new()
@@ -84,7 +86,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
         println!("{:?}", input_vec);
         configure(input_vec, &directory);
 
-        //put make here todo!()
+        make(directory, build_dir, noinstall);
     }
 }
 
@@ -119,12 +121,63 @@ fn configure(input_vec: Vec<&str>, directory: &Path) {
             }
         }
     }
+    return;
 }
-fn make(directory: PathBuf, noinstall: bool) {
-    let make_process = commands::Command::new("make")
-        .current_dir(directory)
-        .arg("install")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn();
+fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
+    println!("Now compiling {}. For the sake of keeping the terminal tidy, only lines containing \"Building\" are shown.", directory.to_str().unwrap().yellow());
+
+    if noinstall == true {
+        println!("Skipping install step.");
+        let mut make_process = commands::Command::new("make")
+            .current_dir(build_directory)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn();
+        let mut make_process = make_process.unwrap();
+
+        if let Some(stderr) = make_process.stdout.take() {
+            let BufReader = std::io::BufReader::new(stderr);
+
+            for line in BufReader.lines() {
+                match line {
+                    Ok(content) => {
+                        if content.contains("Building") {
+                            println!("{}", content.bold().green());
+                        }
+                    }
+                    Err(e) => println!("Error reading line: {}", e),
+                }
+            }
+        }
+
+        let _ = make_process.wait().expect("Command isn't running.");
+    } else {
+        let mut make_process = commands::Command::new("sudo")
+            .current_dir(build_directory)
+            .arg("make")
+            .arg("install")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn();
+        let mut make_process = make_process.unwrap();
+
+        if let Some(stderr) = make_process.stdout.take() {
+            let BufReader = std::io::BufReader::new(stderr);
+
+            for line in BufReader.lines() {
+                match line {
+                    Ok(content) => {
+                        if content.contains("Building") {
+                            println!("{}", content.bold().green());
+                        }
+                    }
+                    Err(e) => println!("Error reading line: {}", e),
+                }
+            }
+        }
+
+        let _ = make_process.wait().expect("Command isn't running.");
+    }
+
+
 }
