@@ -6,6 +6,7 @@ use std::{
     fs as filesystem, path::{Path, PathBuf}, process as commands, process::Stdio, thread as sleeping,
     time::Duration,
 };
+use std::env::current_dir;
 use std::io::BufRead;
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
@@ -124,6 +125,7 @@ fn configure(input_vec: Vec<&str>, directory: &Path) {
     return;
 }
 fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
+    let cores = num_cpus::get();
     println!("Now compiling {}. For the sake of keeping the terminal tidy, only lines containing \"Building\" are shown.", directory.to_str().unwrap().yellow());
 
     if noinstall == true {
@@ -142,6 +144,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
                 match line {
                     Ok(content) => {
                         if content.contains("Building") {
+                            let content = content.replace('\r', "");
                             println!("{}", content.bold().green());
                         }
                     }
@@ -152,10 +155,9 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
 
         let _ = make_process.wait().expect("Command isn't running.");
     } else {
-        let mut make_process = commands::Command::new("sudo")
-            .current_dir(build_directory)
-            .arg("make")
-            .arg("install")
+        let mut make_process = commands::Command::new("cmake")
+            .arg("--build")
+            .current_dir(&build_directory)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn();
@@ -167,6 +169,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             for line in BufReader.lines() {
                 match line {
                     Ok(content) => {
+                        let content = content.replace('\r', "");
                         if content.contains("Building") {
                             println!("{}", content.bold().green());
                         }
@@ -177,6 +180,14 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         }
 
         let _ = make_process.wait().expect("Command isn't running.");
+        let _make_install_process = commands::Command::new("sudo")
+            .current_dir(build_directory)
+            .arg("cmake")
+            .arg("--install")
+            .arg(".")
+            .spawn()
+            .unwrap();
+
     }
 
 
