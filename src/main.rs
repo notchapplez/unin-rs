@@ -1,21 +1,16 @@
+pub mod cmake;
+pub mod installer;
 mod rust;
 pub mod tools;
-pub mod installer;
-pub mod cmake;
 
-use clap::{Parser, command, ValueEnum};
-use colored::Colorize;
-use std::{
-    env, fs,
-    path::PathBuf,
-    process::{Command, Stdio},
-};
-use crate::rust::*;
 use crate::tools::*;
+use clap::{Parser, ValueEnum};
+use std::{
+    path::PathBuf,
+};
 #[derive(Parser, Debug)]
 #[command(name = "unin", version = "0.1.0", author = "notchapplez")]
 struct Cli {
-
     #[arg(
         long,
         value_enum,
@@ -32,8 +27,6 @@ struct Cli {
 
     #[arg(long)]
     noinstall: bool,
-
-
 }
 
 #[derive(Clone, Debug, ValueEnum)]
@@ -50,7 +43,7 @@ enum SetupMode {
 
 fn main() {
     let cli = Cli::parse();
-    
+
     //Set up the languages
     if let Some(mode) = cli.setup {
         match mode {
@@ -66,7 +59,7 @@ fn main() {
     }
 
     detect(cli.path.to_str().unwrap().to_owned(), cli.noinstall);
-    
+
     /*
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
@@ -80,6 +73,5 @@ fn main() {
     let argument = &args[0];
     detect(argument.clone()) */
 }
-
 
 //meow!

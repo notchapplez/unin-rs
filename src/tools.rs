@@ -1,10 +1,10 @@
-use std::{env, fs};
+use crate::cmake::compile_cmake;
+use crate::rust::compile_rust;
+use colored::Colorize;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Command;
-use colored::Colorize;
-use crate::cmake::compile_cmake;
-use crate::rust::compile_rust;
+use std::{env, fs};
 
 pub fn detect(path: String, noinstall: bool) {
     let mut new_path: PathBuf = PathBuf::new();
@@ -39,7 +39,9 @@ pub fn find_files_because_the_user_is_too_lazy(directory: PathBuf) -> Vec<PathBu
     find_executable_file_in_the_goddamn_end_folder(paths.clone())
 }
 
-pub fn install_to_bin_as_sudo_because_the_fucking_user_didnt_supply_sudo(executables: Vec<PathBuf>) {
+pub fn install_to_bin_as_sudo_because_the_fucking_user_didnt_supply_sudo(
+    executables: Vec<PathBuf>,
+) {
     for binary in executables {
         let filename = binary.file_name().unwrap().to_str().unwrap().to_owned();
         let destination = format!("/usr/local/bin/{}", filename);

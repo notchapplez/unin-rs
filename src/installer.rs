@@ -1,5 +1,5 @@
-use std::process::Command;
 use colored::Colorize;
+use std::process::Command;
 
 pub fn setup_files_full() {
     let pm = detect_package_manager();
@@ -152,8 +152,5 @@ pub fn install_package(pm: &str, package: &str) {
         }
     };
 
-    Command::new(cmd)
-        .args(args)
-        .status()
-        .ok();
+    Command::new(cmd).args(args).status().ok();
 }
