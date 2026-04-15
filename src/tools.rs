@@ -23,6 +23,28 @@ pub fn detect(path: String, noinstall: bool) {
             "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
             "CMakeLists.txt" => compile_cmake(PathBuf::from(&path), noinstall),
             "Makefile" => todo!(),
+            "build.meson" => todo!(),
+            "configure" => todo!(),
+            _ => {}
+        }
+    }
+}
+pub fn detect_clean(directory: String) {
+    let mut path = PathBuf::new();
+    if directory.is_empty() {
+        println!("Path is empty, nothing to clean");
+        path = env::current_dir().unwrap()
+    } else {
+        path.clear();
+        path.push(&directory);
+    }
+    for got_file in fs::read_dir(&path).unwrap() {
+        let entry = got_file.unwrap();
+        let os_filename = entry.file_name();
+        let filename = os_filename.into_string().unwrap();
+        match filename.as_str() {
+            "Cargo.toml" => crate::rust::clean(path.clone()),
+            "CMakeLists.txt" => crate::cmake::clean(path.clone()),
             _ => {}
         }
     }
