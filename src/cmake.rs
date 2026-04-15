@@ -6,8 +6,7 @@ use std::{
     fs as filesystem, path::{Path, PathBuf}, process as commands, process::Stdio, thread as sleeping,
     time::Duration,
 };
-use std::env::current_dir;
-use std::io::BufRead;
+use std::io::{stdout, BufRead, BufReader};
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
     let build_dir: PathBuf = PathBuf::from(format!("{}/build", directory.to_str().unwrap()));
@@ -22,14 +21,12 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
         "Description".bold().red(),
         "Default value".bold().red()
     );
-    sleeping::sleep(Duration::from_millis(1500));
+    sleeping::sleep(Duration::from_millis(500));
     let re = Regex::new(r#""[^"]*"|\S+"#).unwrap();
 
     for line in opened_file.lines() {
         if line.contains("option(") {
             line.split("(");
-            if line.contains("option(") {
-                line.split("(");
                 let linecontentfiltered =
                     format!("{}", line.replace("option(", "").replace(")", ""));
 
@@ -42,15 +39,18 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
                 let result_string = result.join(" ");
                 println!("{}", result_string.bold().green());
                 sleeping::sleep(Duration::from_millis(10));
-            }
+
         }
     }
     let arguments_history: PathBuf =
         PathBuf::from(format!("{}/.unin_arguments", directory.to_str().unwrap()));
 
     if arguments_history.exists() {
+        let old_argument_read = filesystem::read_to_string(&arguments_history).unwrap().replace("-DCMAKE_INSTALL_PREFIX=/usr/local", "").replace("-Wno-dev", "");
+        println!("Following arguments were found as they were present in the .unin_arguments file: {}", old_argument_read.bold().yellow().underline());
+
         let check_user_continue_old_args: String = Input::new()
-            .with_prompt("Do you want to use the old arguments? (y/n)")
+            .with_prompt("Do you want to use the already used, cached arguments? (y/n)")
             .interact_text()
             .unwrap();
         if check_user_continue_old_args.trim() == "y" {
@@ -64,6 +64,8 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
                 .with_prompt("Add Arguments now. Prefix your project arguments with -D and use a space for separation, for example -DBUILD_SHARED_LIBS=ON. Other arguments will also be used, like warning flags.")
                 .interact_text()
                 .unwrap();
+
+            println!();
 
             let full_cmake_input = format!("{} -DCMAKE_INSTALL_PREFIX=/usr/local",&input);
             let input_vec: Vec<&str> = input.split(' ').collect();
@@ -79,9 +81,10 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             .with_prompt("Add Arguments now. Prefix your project arguments with -D and use a space for separation, for example -DBUILD_SHARED_LIBS=ON. Other arguments will also be used, like warning flags.")
             .interact_text()
             .unwrap();
+        println!();
 
         println!("{}", input);
-        let full_cmake_input = format!("{} -DCMAKE_INSTALL_PREFIX=/usr/local",&input);
+        let full_cmake_input = format!("{} -DCMAKE_INSTALL_PREFIX=/usr/local -Wno-dev",&input);
         let input_vec: Vec<&str> = full_cmake_input.split(" ").collect();
         filesystem::write(arguments_history, full_cmake_input.clone()).unwrap();
         println!("{:?}", input_vec);
@@ -92,41 +95,33 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
 }
 
 fn configure(input_vec: Vec<&str>, directory: &Path) {
-    let pb = ProgressBar::new_spinner();
-    pb.set_message("Compiling...");
-    pb.enable_steady_tick(Duration::from_millis(100));
+    println!();
     filesystem::create_dir_all(format!("{}/build", directory.to_str().unwrap())).unwrap();
 
     let build_dir = format!("{}/build", directory.to_str().unwrap());
     let mut configure_cmake = commands::Command::new("cmake")
         .current_dir(build_dir)
         .arg("..")
+        .arg("-Wno-dev")
         .args(input_vec)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .expect("Failed to compile");
+        .output()
+        .expect("Failed to configure");
 
-    loop {
-        match configure_cmake.try_wait() {
-            Ok(Some(_status)) => {
-                pb.finish_with_message("Build files written! Proceeding to compilation...");
-                break;
-            }
-            Ok(None) => {
-                std::thread::sleep(Duration::from_millis(100));
-            }
-            Err(e) => {
-                pb.finish_with_message(format!("Error: {}", e));
-                break;
-            }
-        }
+    print!("{}", String::from_utf8_lossy(&configure_cmake.stdout).yellow());
+    eprint!("{}", String::from_utf8_lossy(&configure_cmake.stderr).red());
+
+    if !configure_cmake.status.success() {
+        eprintln!("CMake configure failed. See the output above for more information.");
+        std::process::exit(1);
     }
-    return;
 }
 fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
+
+    println!("{}", "Starting to compile in three seconds. To cancel, press Ctrl+C".blue());
+    sleeping::sleep(Duration::from_secs(3));
+
     let cores = num_cpus::get();
-    println!("Now compiling {}. For the sake of keeping the terminal tidy, only lines containing \"Building\" are shown.", directory.to_str().unwrap().yellow());
+    println!("Now compiling {}", directory.to_str().unwrap().yellow());
 
     if noinstall == true {
         println!("Skipping install step.");
@@ -134,21 +129,33 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             .current_dir(build_directory)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn();
-        let mut make_process = make_process.unwrap();
+            .spawn()
+            .expect("Failed to start make");
 
-        if let Some(stderr) = make_process.stdout.take() {
-            let BufReader = std::io::BufReader::new(stderr);
+        if let Some(stdout) = make_process.stdout.take() {
+            let buf_reader = std::io::BufReader::new(stdout);
 
-            for line in BufReader.lines() {
+            for line in buf_reader.lines() {
                 match line {
                     Ok(content) => {
-                        if content.contains("Building") {
-                            let content = content.replace('\r', "");
-                            println!("{}", content.bold().green());
-                        }
+                        let content = content.replace('\r', "");
+                        println!("{}", content.bold().green());
                     }
-                    Err(e) => println!("Error reading line: {}", e),
+                    Err(e) => println!("Error reading stdout: {}", e),
+                }
+            }
+        }
+
+        if let Some(stderr) = make_process.stderr.take() {
+            let buf_reader = std::io::BufReader::new(stderr);
+
+            for line in buf_reader.lines() {
+                match line {
+                    Ok(content) => {
+                        let content = content.replace('\r', "");
+                        eprintln!("{}", content.red());
+                    }
+                    Err(e) => println!("Error reading stderr: {}", e),
                 }
             }
         }
@@ -158,28 +165,44 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         let mut make_process = commands::Command::new("cmake")
             .arg("--build")
             .current_dir(&build_directory)
+            .arg(".")
+            .arg("-j")
+            .arg(cores.to_string())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn();
-        let mut make_process = make_process.unwrap();
+            .spawn()
+            .expect("Failed to start cmake build");
 
-        if let Some(stderr) = make_process.stdout.take() {
-            let BufReader = std::io::BufReader::new(stderr);
+        if let Some(stdout) = make_process.stdout.take() {
+            let buf_reader = std::io::BufReader::new(stdout);
 
-            for line in BufReader.lines() {
+            for line in buf_reader.lines() {
                 match line {
                     Ok(content) => {
                         let content = content.replace('\r', "");
-                        if content.contains("Building") {
-                            println!("{}", content.bold().green());
-                        }
+                        println!("{}", content.bold().purple());
                     }
-                    Err(e) => println!("Error reading line: {}", e),
+                    Err(e) => println!("Error reading stdout: {}", e),
+                }
+            }
+        }
+
+        if let Some(stderr) = make_process.stderr.take() {
+            let buf_reader = std::io::BufReader::new(stderr);
+
+            for line in buf_reader.lines() {
+                match line {
+                    Ok(content) => {
+                        let content = content.replace('\r', "");
+                        eprintln!("{}", content.red());
+                    }
+                    Err(e) => println!("Error reading stderr: {}", e),
                 }
             }
         }
 
         let _ = make_process.wait().expect("Command isn't running.");
+
         let _make_install_process = commands::Command::new("sudo")
             .current_dir(build_directory)
             .arg("cmake")
@@ -187,8 +210,5 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             .arg(".")
             .spawn()
             .unwrap();
-
     }
-
-
 }
