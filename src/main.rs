@@ -2,12 +2,15 @@ pub mod cmake;
 pub mod installer;
 mod rust;
 pub mod tools;
+pub mod make;
 
 use crate::tools::*;
 use clap::{Parser, ValueEnum};
 use std::{
     path::PathBuf,
 };
+use colored::Colorize;
+
 #[derive(Parser, Debug)]
 #[command(name = "unin", version = "0.1.0", author = "notchapplez")]
 struct Cli {
@@ -18,6 +21,11 @@ struct Cli {
     )]
     setup: Option<SetupMode>,
 
+    #[arg(long,
+        value_enum,
+        help = "Clean artefacts built")]
+    clean: Option<PathBuf>,
+
     #[arg(
         value_name = "PATH",
         default_value = ".",
@@ -27,6 +35,8 @@ struct Cli {
 
     #[arg(long, default_value = "false", help = "Skip the install step")]
     noinstall: bool,
+
+
 }
 
 #[derive(Clone, Debug, ValueEnum)]
@@ -44,6 +54,11 @@ enum SetupMode {
 
 fn main() {
     let cli = Cli::parse();
+
+    if cli.clean.is_some() {
+        println!("Cleaning {}", cli.clean.clone().unwrap().to_str().unwrap().yellow());
+        detect_clean(cli.clean.unwrap().to_str().unwrap().to_owned());
+    }
 
     //Set up the languages
     if let Some(mode) = cli.setup {
