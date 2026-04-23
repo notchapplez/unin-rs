@@ -1,15 +1,18 @@
 pub mod cmake;
 pub mod installer;
+pub mod make;
 mod rust;
 pub mod tools;
-pub mod make;
+pub mod zig;
 
+use std::io;
+use std::io::Write;
 use crate::tools::*;
 use clap::{Parser, ValueEnum};
-use std::{
-    path::PathBuf,
-};
 use colored::Colorize;
+use std::path::PathBuf;
+use std::process::exit;
+use unin::registry;
 
 #[derive(Parser, Debug)]
 #[command(name = "unin", version = "0.1.0", author = "notchapplez")]
@@ -21,10 +24,6 @@ struct Cli {
     )]
     setup: Option<SetupMode>,
 
-    #[arg(long,
-        value_enum,
-        help = "Clean artefacts built")]
-    clean: Option<PathBuf>,
 
     #[arg(
         value_name = "PATH",
@@ -36,8 +35,13 @@ struct Cli {
     #[arg(long, default_value = "false", help = "Skip the install step")]
     noinstall: bool,
 
+    #[arg(long, default_value = "false", help = "debug purposes", required = false)]
+    test: bool,
 
+    #[arg(value_enum, help = "Clean artefacts built", required = false, conflicts_with_all = ["setup", "noinstall", "test"])]
+    clean: Option<PathBuf>,
 }
+
 
 #[derive(Clone, Debug, ValueEnum)]
 enum SetupMode {
@@ -56,11 +60,21 @@ fn main() {
     let cli = Cli::parse();
 
     if cli.clean.is_some() {
-        println!("Cleaning {}", cli.clean.clone().unwrap().to_str().unwrap().yellow());
+        println!("Cleaning");
+        println!(
+            "Cleaning {}",
+            cli.clean.clone().unwrap().to_str().unwrap().yellow()
+        );
+        let _ = io::stdout().flush();
         detect_clean(cli.clean.unwrap().to_str().unwrap().to_owned());
+        println!("Cleaning finished, closing");
+        exit(0);
+    }
+    if cli.test {
+        registry::temp_test();
+        exit(0)
     }
 
-    //Set up the languages
     if let Some(mode) = cli.setup {
         match mode {
             SetupMode::Full => installer::setup_files_full(),
@@ -76,19 +90,6 @@ fn main() {
     }
 
     detect(cli.path.to_str().unwrap().to_owned(), cli.noinstall);
-
-    /*
-    let mut args: Vec<String> = env::args().collect();
-    args.remove(0);
-    let args_string = format!("Current arguments given are {:?}", args);
-    println!("{}", args_string.yellow());
-    if args.is_empty() {
-        let cwd = env::current_dir().unwrap();
-        args = vec![cwd.into_os_string().into_string().unwrap()];
-        println!("Fixed empty args to {:?}\n", args);
-    }
-    let argument = &args[0];
-    detect(argument.clone()) */
 }
 
 //meow!

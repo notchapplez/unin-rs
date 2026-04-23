@@ -25,6 +25,7 @@ pub fn detect(path: String, noinstall: bool) {
             "Makefile" => todo!(),
             "build.meson" => todo!(),
             "configure" => todo!(),
+            "build.zig" => todo!(),
             _ => {}
         }
     }
@@ -62,7 +63,7 @@ pub fn find_files_because_the_user_is_too_lazy(directory: PathBuf) -> Vec<PathBu
     find_executable_file_in_the_goddamn_end_folder(paths.clone())
 }
 
-pub fn install_to_bin_as_sudo_because_the_fucking_user_didnt_supply_sudo(
+pub fn install_to_bin(
     executables: Vec<PathBuf>,
 ) {
     for binary in executables {
@@ -114,3 +115,4 @@ pub fn find_executable_file_in_the_goddamn_end_folder(files: Vec<PathBuf>) -> Ve
         })
         .collect()
 }
+
