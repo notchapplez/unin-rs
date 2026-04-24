@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use time::{OffsetDateTime, PrimitiveDateTime};
 use crate::gradraw;
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct UninPackage {
     pub name: String,
     pub paths: Vec<PathBuf>,
@@ -94,7 +94,7 @@ pub fn time_read() -> PrimitiveDateTime {
     x
 }
 
-pub fn registry_write(package: UninPackage) {
+pub fn registry_write(package: &UninPackage) {
     let registry_path = format!(
         "{}/.unin/registry/registry.json",
         std::env::var("HOME").unwrap()
@@ -118,7 +118,7 @@ pub fn registry_write(package: UninPackage) {
         packages[pos].updated = true;
         packages[pos].change_date = time_create();
     } else {
-        packages.push(package);
+        packages.push((*package).clone())
     }
 
     let mut file = OpenOptions::new()
