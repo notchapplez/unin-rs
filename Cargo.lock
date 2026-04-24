@@ -159,6 +159,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
+name = "color-convert"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c40644291ce568a39e8db8a97a0ced679d022a152490b589e8765d459c7274d9"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -670,6 +679,7 @@ version = "0.1.0"
 dependencies = [
  "cargo_metadata",
  "clap",
+ "color-convert",
  "colored",
  "dialoguer",
  "indicatif",

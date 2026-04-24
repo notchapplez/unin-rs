@@ -4,12 +4,14 @@ pub mod make;
 mod rust;
 pub mod tools;
 pub mod zig;
+pub mod gradraw;
+pub use gradraw::*;
 
-use std::io;
-use std::io::Write;
 use crate::tools::*;
 use clap::{Parser, ValueEnum};
 use colored::Colorize;
+use std::io;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::exit;
 use unin::registry;
@@ -24,7 +26,6 @@ struct Cli {
     )]
     setup: Option<SetupMode>,
 
-
     #[arg(
         value_name = "PATH",
         default_value = ".",
@@ -35,13 +36,25 @@ struct Cli {
     #[arg(long, default_value = "false", help = "Skip the install step")]
     noinstall: bool,
 
-    #[arg(long, default_value = "false", help = "debug purposes", required = false)]
+    #[arg(
+        long,
+        default_value = "false",
+        help = "debug purposes",
+        required = false
+    )]
     test: bool,
 
-    #[arg(value_enum, help = "Clean artefacts built", required = false, conflicts_with_all = ["setup", "noinstall", "test"])]
+    #[arg(
+    long,
+    value_name = "PATH",
+    num_args = 0..=1,
+    default_missing_value = ".",
+    help = "Clean artefacts built",
+    required = false,
+    conflicts_with_all = ["setup", "noinstall", "test", "path"]
+    )]
     clean: Option<PathBuf>,
 }
-
 
 #[derive(Clone, Debug, ValueEnum)]
 enum SetupMode {
@@ -60,14 +73,12 @@ fn main() {
     let cli = Cli::parse();
 
     if cli.clean.is_some() {
-        println!("Cleaning");
         println!(
             "Cleaning {}",
             cli.clean.clone().unwrap().to_str().unwrap().yellow()
         );
         let _ = io::stdout().flush();
         detect_clean(cli.clean.unwrap().to_str().unwrap().to_owned());
-        println!("Cleaning finished, closing");
         exit(0);
     }
     if cli.test {

@@ -1,14 +1,15 @@
 //unPack ver 0.0.1
 
-use std::io::Write;
-use std::fmt::{Debug, Display};
-use std::fs;
-use std::fs::{create_dir_all, OpenOptions};
-use std::path::{Path, PathBuf};
+
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Debug, Display};
+use std::fs;
+use std::fs::{OpenOptions, create_dir_all};
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use time::{OffsetDateTime, PrimitiveDateTime};
-
+use crate::gradraw;
 
 #[derive(Serialize, Deserialize, PartialEq)]
 pub struct UninPackage {
@@ -20,7 +21,11 @@ pub struct UninPackage {
 
 impl Display for UninPackage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Name: {}\nPaths: {:?}\nChange Date: {}", self.name, self.paths, self.change_date)
+        write!(
+            f,
+            "Name: {}\nPaths: {:?}\nChange Date: {}",
+            self.name, self.paths, self.change_date
+        )
     }
 }
 impl UninPackage {
@@ -52,32 +57,48 @@ pub fn get_registry() {
     let registry_path = PathBuf::from(format!("{}/.unin/registry/", home));
     let registry_file = PathBuf::from(format!("{}/registry.json", registry_path.to_str().unwrap()));
     let data = fs::read_to_string(registry_file).unwrap();
-    let packages: Vec<UninPackage> = serde_json::from_str(&data).unwrap_or_else(|e| panic!("Shit happened: {:?}", e));
+    let packages: Vec<UninPackage> =
+        serde_json::from_str(&data).unwrap_or_else(|e| panic!("Shit happened: {:?}", e));
     for p in packages {
         println!("\n{}", p);
     }
-
 }
 pub fn time_create() -> String {
     let now_utc = OffsetDateTime::now_utc();
-    let primitive_now_utc = PrimitiveDateTime::new(now_utc.date(), now_utc.time().truncate_to_second().replace_nanosecond(0).unwrap());
+    let primitive_now_utc = PrimitiveDateTime::new(
+        now_utc.date(),
+        now_utc
+            .time()
+            .truncate_to_second()
+            .replace_nanosecond(0)
+            .unwrap(),
+    );
     let fucking_string = PrimitiveDateTime::to_string(&primitive_now_utc);
     format!("{}", fucking_string)
 }
 
 pub fn time_read() -> PrimitiveDateTime {
-    let registry_path = PathBuf::from(format!("{}/.unin/registry/", String::from(std::env::var("HOME").unwrap_or_else(|_| "/root/".to_string()))));
+    let registry_path = PathBuf::from(format!(
+        "{}/.unin/registry/",
+        String::from(std::env::var("HOME").unwrap_or_else(|_| "/root/".to_string()))
+    ));
     let registry_file = PathBuf::from(format!("{}/registry.json", registry_path.to_str().unwrap()));
     let data = std::fs::read_to_string(registry_file).unwrap();
-    let p: UninPackage = serde_json::from_str(&data).unwrap_or_else(|e| panic!("Shit happened: {:?}", e));
+    let p: UninPackage =
+        serde_json::from_str(&data).unwrap_or_else(|e| panic!("Shit happened: {:?}", e));
     let time_string: String = p.change_date.clone();
-    let x: PrimitiveDateTime = PrimitiveDateTime::parse(&time_string, &time::format_description::well_known::Rfc3339).unwrap();
+    let x: PrimitiveDateTime =
+        PrimitiveDateTime::parse(&time_string, &time::format_description::well_known::Rfc3339)
+            .unwrap();
     println!("{}", String::from(x.to_string()));
     x
 }
 
 pub fn registry_write(package: UninPackage) {
-    let registry_path = format!("{}/.unin/registry/registry.json", std::env::var("HOME").unwrap());
+    let registry_path = format!(
+        "{}/.unin/registry/registry.json",
+        std::env::var("HOME").unwrap()
+    );
     let registry_dir = Path::new(&registry_path).parent().unwrap();
 
     let _ = create_dir_all(registry_dir);
@@ -111,9 +132,15 @@ pub fn registry_write(package: UninPackage) {
     file.flush().unwrap();
 
     if is_new {
-        println!("Registry for entry {} created successfully!", package_name.green());
+        println!(
+            "Registry for entry {} created successfully!",
+            package_name.green()
+        );
     } else {
-        println!("Registry for entry {} updated successfully!", package_name.green());
+        println!(
+            "Registry for entry {} updated successfully!",
+            package_name.green()
+        );
     }
 }
 pub fn registry_get_package(package_name: String) -> Option<UninPackage> {
@@ -124,27 +151,44 @@ pub fn registry_get_package(package_name: String) -> Option<UninPackage> {
     let registry_path = PathBuf::from(format!("{}/.unin/registry/", home));
     let registry_file = PathBuf::from(format!("{}/registry.json", registry_path.to_str().unwrap()));
     let data = fs::read_to_string(registry_file).unwrap();
-    let packages: Vec<UninPackage> = serde_json::from_str(&data).unwrap_or_else(|e| panic!("Shit happened: {:?}", e));
+    let packages: Vec<UninPackage> =
+        serde_json::from_str(&data).unwrap_or_else(|e| panic!("Shit happened: {:?}", e));
 
     packages.into_iter().find(|p| p.name == package_name)
 }
 pub fn registry_exists() -> bool {
-    let registry_path = PathBuf::from(format!("{}/.unin/registry/", std::env::var("HOME").unwrap()));
+    let registry_path = PathBuf::from(format!(
+        "{}/.unin/registry/",
+        std::env::var("HOME").unwrap()
+    ));
     let registry_file = PathBuf::from(format!("{}/registry.json", registry_path.to_str().unwrap()));
     if !registry_file.exists() {
-        if !create_dir_all(&registry_file).is_ok() {
+        if !create_dir_all(&registry_path).is_ok() {  // Create the DIRECTORY, not the file path
             println!("Failed to create registry for unPack ver 0.0.1");
-             false
+            false //the directory didn't get created, so it doesn't exist.
         } else {
-            true
+            // Create the empty registry file
+            if let Ok(mut file) = std::fs::File::create(&registry_file) {
+                let _ = file.write_all(b"[]");  // Write empty JSON array
+                true //it exists now
+            } else {
+                println!("Failed to create registry file");
+                false //It didn't get created, so it doesn't exist.
+            }
         }
     } else {
-        true
+        true //It existed.
     }
 }
 
 pub fn temp_test() {
-    let x: UninPackage = UninPackage{name: String::from("a"), paths: vec![PathBuf::from("/root/ad"), PathBuf::from("/root/da")], change_date: String::from(time_create()), updated: false};
+    let x: UninPackage = UninPackage {
+        name: String::from("a"),
+        paths: vec![PathBuf::from("/root/ad"), PathBuf::from("/root/da")],
+        change_date: String::from(time_create()),
+        updated: false,
+    };
     let test: Option<UninPackage> = registry_get_package(x.name.clone());
     println!("{:?}", DebuggableOptionUninPackage(test));
+    gradraw::gradient_print("#ffa18e".to_string(), "#910983".to_string(), "charred  ")
 }

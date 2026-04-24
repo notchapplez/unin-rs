@@ -6,6 +6,15 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 
+#[derive(Debug)]
+struct CustomError(Vec<String>);
+impl std::fmt::Display for CustomError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Errors: {:?}", self.0)
+    }
+}
+impl std::error::Error for CustomError {}
+
 pub fn detect(path: String, noinstall: bool) {
     let mut new_path: PathBuf = PathBuf::new();
     if path.is_empty() {
@@ -63,9 +72,8 @@ pub fn find_files_because_the_user_is_too_lazy(directory: PathBuf) -> Vec<PathBu
     find_executable_file_in_the_goddamn_end_folder(paths.clone())
 }
 
-pub fn install_to_bin(
-    executables: Vec<PathBuf>,
-) {
+pub fn install_to_bin(executables: Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
+    let mut errors: Vec<String> = Vec::new();
     for binary in executables {
         let filename = binary.file_name().unwrap().to_str().unwrap().to_owned();
         let destination = format!("/usr/local/bin/{}", filename);
@@ -74,8 +82,7 @@ pub fn install_to_bin(
             .arg("rm")
             .arg(&destination)
             .arg("-f")
-            .output()
-            .unwrap()
+            .output()?
             .status;
         if clean.success() {
             println!("{}", "Removal of the old version is complete!".green())
@@ -91,13 +98,22 @@ pub fn install_to_bin(
 
         if !status.success() {
             println!("Failed to copy binaries ");
+            errors.push(format!("{}", binary.to_str().unwrap()));
         } else {
-            Command::new("sudo")
+            if Command::new("sudo")
                 .args(["chmod", "+x", &destination])
                 .status()
-                .ok();
-            println!("{}", "Installation to /usr/local/bin is complete!".green())
+                .is_ok() {
+                println!("Copied {} to {}", binary.to_str().unwrap(), destination.green());
+            } else {
+                println!("Failed to copy {} {}", binary.to_str().unwrap(), destination.green());
+            }
         }
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(Box::new(CustomError(errors)))
     }
 }
 pub fn sudo() -> bool {
@@ -115,4 +131,3 @@ pub fn find_executable_file_in_the_goddamn_end_folder(files: Vec<PathBuf>) -> Ve
         })
         .collect()
 }
-
