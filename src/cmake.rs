@@ -12,6 +12,8 @@ use std::{
     thread as sleeping,
     time::Duration,
 };
+use unin::{registry, time_create, UninPackage};
+use crate::tools::{find_executable_file_in_the_goddamn_end_folder, find_files_because_the_user_is_too_lazy};
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
     //defines the function
@@ -252,16 +254,31 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
 
         if make_process_status.code() != Option::from(0) {
             println!("{}", "Compilation failed, not installing.".red());
-            unsafe { exit(1) };
+            std::process::exit(1);
         }
 
         let _make_install_process = commands::Command::new("sudo") //actually installs the project
-            .current_dir(build_directory)
+            .current_dir(&build_directory)
             .arg("cmake")
             .arg("--install")
             .arg(".")
             .spawn()
             .unwrap();
+        // i still need to know the binary paths
+        //soooo
+        let binaries: Vec<PathBuf> = find_executable_file_in_the_goddamn_end_folder(find_files_because_the_user_is_too_lazy(build_directory)); //this is a Vec<PathBuf>
+        //add the fuckers to the registry
+        for binary in binaries {
+            let temp_package: UninPackage = UninPackage{
+                name: binary.to_str().unwrap().split('/').last().unwrap().to_string(),
+                paths: vec![binary.clone()],
+                change_date: time_create(),
+                updated: false
+            };
+            println!("Adding {} to registry", temp_package);
+            registry::registry_write(&temp_package);
+        }
+
     }
 }
 
