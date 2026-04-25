@@ -112,13 +112,14 @@ pub fn registry_write(package: &UninPackage) {
         Vec::new()
     } else {
         serde_json::from_str(&existing_content).unwrap_or_else(|_| Vec::new())
-    }; 
+    };
 
     let package_name = package.name.clone();
 
     if let Some(pos) = packages.iter().position(|p| p.name == package.name) {
         packages[pos].updated = true;
         packages[pos].change_date = time_create();
+        packages[pos].paths = package.paths.clone();
     } else {
         packages.push((*package).clone())
     }
