@@ -3,7 +3,7 @@ use dialoguer::Input;
 use indicatif::ProgressBar;
 use libc::exit;
 use regex::Regex;
-use std::io::{BufRead, BufReader, stdout};
+use std::io::{BufRead, BufReader, Write, stdout, stderr};
 use std::{
     fs as filesystem,
     path::{Path, PathBuf},
@@ -213,8 +213,6 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             .spawn()
             .expect("Failed to start cmake build");
 
-        let make_process_status = make_process.wait().expect("Command isn't running."); //waits for the command to finish
-
         if let Some(stdout) = make_process.stdout.take() {
             //if the stdout is not None
             let buf_reader = BufReader::new(stdout); //opens a BufReader
@@ -225,8 +223,13 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
                     //matches the line
                     Ok(content) => {
                         //if the line is fine
-                        let content = content.replace('\r', ""); //replaces \r with nothing
-                        println!("{}", content.bold().purple()); //prints the compilation progress
+                        if content.contains("Building") {
+                            let mut contented = content.split("[").collect::<Vec<&str>>();
+                            contented[0] = "[" ;
+                            let contented_string = contented.iter().map(|s| *s).collect::<String>();
+                            print!("\r\x1B[K{}", contented_string.bold().purple());
+                            std::io::stdout().flush().unwrap();
+                        }
                     }
                     Err(e) => println!("Error reading stdout: {}", e), //if there is an error, print the error
                 }

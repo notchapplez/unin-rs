@@ -180,7 +180,7 @@ pub fn registry_exists() -> bool {
             }
         }
     } else {
-        true //It existed.
+        true //It existed and it will exist forever.as 
     }
 }
 
