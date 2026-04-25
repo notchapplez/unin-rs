@@ -23,7 +23,9 @@ impl Display for UninPackage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Name: {}\nPaths: {:?}\nChange Date: {}",
+            "Name: {}\n\
+            Paths: {:?}\n\
+            Change Date: {}",
             self.name, self.paths, self.change_date
         )
     }
@@ -110,7 +112,7 @@ pub fn registry_write(package: &UninPackage) {
         Vec::new()
     } else {
         serde_json::from_str(&existing_content).unwrap_or_else(|_| Vec::new())
-    };
+    }; 
 
     let package_name = package.name.clone();
 

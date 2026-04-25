@@ -5,6 +5,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
+use path_absolutize::Absolutize;
 
 #[derive(Debug)]
 struct CustomError(Vec<String>);
@@ -14,6 +15,12 @@ impl std::fmt::Display for CustomError {
     }
 }
 impl std::error::Error for CustomError {}
+
+pub fn absolutize_path(path: String) -> PathBuf {
+    let path = PathBuf::from(path);
+    let absolutized_path = path.absolutize().unwrap();
+    absolutized_path.to_path_buf()
+}
 
 pub fn detect(path: String, noinstall: bool) {
     let mut new_path: PathBuf = PathBuf::new();

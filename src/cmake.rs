@@ -12,6 +12,7 @@ use std::{
     thread as sleeping,
     time::Duration,
 };
+use path_absolutize::Absolutize;
 use unin::{registry, time_create, UninPackage};
 use crate::tools::{find_executable_file_in_the_goddamn_end_folder, find_files_because_the_user_is_too_lazy};
 
@@ -271,7 +272,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         for binary in binaries {
             let temp_package: UninPackage = UninPackage{
                 name: binary.to_str().unwrap().split('/').last().unwrap().to_string(),
-                paths: vec![binary.clone()],
+                paths: vec![PathBuf::from(binary.absolutize().unwrap().as_ref())],
                 change_date: time_create(),
                 updated: false
             };
