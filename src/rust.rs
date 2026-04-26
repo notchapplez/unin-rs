@@ -84,7 +84,7 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         println!("Found {} in {}", installed_absolute_path, installed_absolute_path.green());
         let temp_binary: UninPackage = UninPackage { name: binary.to_str().unwrap().split('/').collect::<Vec<&str>>().last().unwrap().to_string(), paths: vec![PathBuf::from(installed_absolute_path)], change_date: String::from(time_create()), updated: false };
         registry_write(&temp_binary);
-        println!("Writing\n {} to registry", temp_binary);
+        println!("\n{}", temp_binary);
     }
 }
 pub fn clean(directory: PathBuf) {

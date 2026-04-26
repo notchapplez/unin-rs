@@ -23,9 +23,7 @@ impl Display for UninPackage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Name: {}\n\
-            Paths: {:?}\n\
-            Change Date: {}",
+            "\tName: {}\n\tPaths: {:?}\n\tChange Date: {}\n",
             self.name, self.paths, self.change_date
         )
     }
