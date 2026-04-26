@@ -133,6 +133,16 @@ fn cargo_pkg_count(directory: &PathBuf) -> usize {
             continue;
         }
     }
-    println!("{} packages found", lines.len() - 1);
-    return lines.len()
+    let mut final_lines: Vec<&str> = Vec::new();
+    lines.dedup();
+    for line in lines {
+        if !line.contains("(proc-macro)") {
+            final_lines.push(line);
+        } else {
+            continue;
+        }
+    }
+    let lines_count = final_lines.len() + 1;
+    println!("{} packages found", lines_count);
+    return lines_count
 }
