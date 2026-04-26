@@ -5,8 +5,8 @@ use crate::tools::{
 };
 use colored::Colorize; //other imports
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
-use std::fmt::Write;
 use std::io::{BufRead, BufReader};
+use std::io::Write; // Import `Write` for `flush()` method
 use std::{
     env, fs,
     path::PathBuf,
@@ -27,28 +27,12 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     }
     println!("Now compiling {}", full_path.yellow()); //prints a start message
 
-    let pkg_count = cargo_pkg_count(&directory);
-
-    let pb = ProgressBar::new(pkg_count as u64);
-    pb.set_style(
-        ProgressStyle::with_template(
-            "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {percent}% ({eta})",
-        )
-        .unwrap()
-        .with_key("eta", |state: &ProgressState, w: &mut dyn Write| {
-            write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
-        })
-        .progress_chars("▰ ▱"),
-    );
-
     let mut child = Command::new("cargo")
         .args([
             "build",
             "--release",
             "--color",
             "always",
-            "--message-format",
-            "json",
         ])
         .current_dir(&directory)
         .stdout(Stdio::piped())
@@ -56,21 +40,23 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         .spawn()
         .expect("Failed to compile");
 
-    let stdout = child.stdout.take().unwrap();
-    let reader = std::io::BufReader::new(stdout);
-    for line in reader.lines() {
-        if let Ok(line_content) = line {
-            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&line_content) {
-                if let Some(reason) = json.get("reason").and_then(|r| r.as_str()) {
-                    if reason == "compiler-artifact" {
-                        pb.inc(1);
-                    }
+    let stderr = child.stderr.take().unwrap();
+    let reader = std::io::BufReader::new(stderr);
+    for line in reader.lines() { 
+        match line {
+            //matches the line
+            Ok(content) => {
+                //if the line is fine
+                if content.contains("Compiling") {
+                    let soos = content.trim().clone().to_string();
+                    print!("\r\x1B[K{}", soos.bold().purple());
+                    let _ = std::io::stdout().flush().unwrap();
                 }
             }
+            Err(e) => println!("Error reading stdout: {}", e), //if there is an error, print the error
         }
     }
-    pb.finish_with_message("Finished compiling Rust project.");
-
+    
     println!();
     let releases_folder = PathBuf::from(format!("{}/target/release", directory.to_str().unwrap()));
     if !releases_folder.exists() {
