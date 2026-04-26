@@ -1,9 +1,10 @@
 use colored::Colorize;
 use std::io::BufRead;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{exit, Command};
+use crate::tools::{find_executable_file_in_the_goddamn_end_folder, find_files_because_the_user_is_too_lazy};
 
-fn build_zig(directory: PathBuf, noinstall: bool) {
+pub fn build_zig(directory: PathBuf, noinstall: bool) {
     let mut zig_build_process = Command::new("zig")
         .current_dir(&directory)
         .arg("build")
@@ -13,9 +14,6 @@ fn build_zig(directory: PathBuf, noinstall: bool) {
         .spawn()
         .expect("Couldn't start the zig build process.");
 
-    let waiter = &zig_build_process
-        .wait()
-        .expect("Couldn't wait for the zig build process.");
     if let Some(stdout) = zig_build_process.stdout.take() {
         let buf_reader = std::io::BufReader::new(stdout);
 
@@ -29,6 +27,19 @@ fn build_zig(directory: PathBuf, noinstall: bool) {
             }
         }
     }
+    let _waiter = &zig_build_process
+        .wait()
+        .expect("Couldn't wait for the zig build process.");
 
-    let out_dir = format!("{}/zig-out", directory.to_str().unwrap());
+    let out_dir = PathBuf::from(format!("{}/zig-out/bin", directory.to_str().unwrap()));
+    if noinstall {
+        println!("{}", "Skipping installation of zig binaries".yellow());
+        println!("You can find the binaries in {}", out_dir.to_str().unwrap().yellow());
+        exit(0)
+    }
+    println!("Installing zig binaries");
+    let executables = find_files_because_the_user_is_too_lazy(out_dir.clone());
+    let _  = executables.iter().for_each(|executable| {println!("Found {}", executable.to_str().unwrap().green());});
+
+
 }

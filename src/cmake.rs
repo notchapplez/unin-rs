@@ -270,8 +270,8 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             .unwrap();
         // i still need to know the binary paths
         //soooo
-        let binaries: Vec<PathBuf> = find_executable_file_in_the_goddamn_end_folder(find_files_because_the_user_is_too_lazy(build_directory)); //this is a Vec<PathBuf>
-        //add the fuckers to the registry
+        let binaries: Vec<PathBuf> = find_files_because_the_user_is_too_lazy(build_directory); //this is a Vec<PathBuf>
+        //add these fuckers to the registry
         for binary in binaries {
             let temp_package: UninPackage = UninPackage{
                 name: binary.to_str().unwrap().split('/').last().unwrap().to_string(),

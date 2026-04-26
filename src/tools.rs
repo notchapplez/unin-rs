@@ -1,5 +1,6 @@
 use crate::cmake::compile_cmake;
 use crate::rust::compile_rust;
+use crate::zig::build_zig;
 use colored::Colorize;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
@@ -36,12 +37,12 @@ pub fn detect(path: String, noinstall: bool) {
         let os_filename = entry.file_name();
         let filename = os_filename.into_string().unwrap();
         match filename.as_str() {
-            "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
             "CMakeLists.txt" => compile_cmake(PathBuf::from(&path), noinstall),
+            "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
             "Makefile" => todo!(),
             "build.meson" => todo!(),
             "configure" => todo!(),
-            "build.zig" => todo!(),
+            "build.zig" => build_zig(PathBuf::from(&path), noinstall),
             _ => {}
         }
     }
@@ -66,8 +67,9 @@ pub fn detect_clean(directory: String) {
         }
     }
 }
+///universal finder
 pub fn find_files_because_the_user_is_too_lazy(directory: PathBuf) -> Vec<PathBuf> {
-    let releases_folder = format!("{}/target/release", directory.to_str().unwrap());
+    let releases_folder = format!("{}", directory.to_str().unwrap());
     let mut paths: Vec<PathBuf> = vec![];
     for file in fs::read_dir(PathBuf::from(releases_folder)).unwrap() {
         let file_path = file.unwrap().path();

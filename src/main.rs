@@ -58,15 +58,15 @@ struct Cli {
 
 #[derive(Clone, Debug, ValueEnum)]
 enum SetupMode {
-    Full,
-    Rust,
-    Cmake,
-    Make,
-    Go,
-    Zig,
-    Swift,
-    Haskell,
-    D,
+    Full, //done
+    Rust, //done
+    Cmake, //done
+    Make, //not done yet
+    Go, //not done yet
+    Zig, //in progress
+    Swift, //not done yet
+    Haskell, //not done yet
+    D, //what the hell is this
 }
 
 fn main() {
