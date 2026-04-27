@@ -11,6 +11,8 @@ use std::{
     path::PathBuf,
     process::{Command, Stdio},
 };
+use std::process::exit;
+use path_absolutize::Absolutize;
 use unin::{registry_write, time_create, UninPackage};
 
 pub fn compile_rust(directory: PathBuf, noinstall: bool) {
@@ -18,7 +20,9 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     //defines the function
     if directory == PathBuf::from(".") {
         let directory = env::current_dir().unwrap();
-        full_path = String::from(directory.to_str().unwrap());
+        full_path = String::from(directory.absolutize().unwrap().to_str().unwrap());
+    } else {
+        full_path = String::from(directory.absolutize().unwrap().to_str().unwrap());
     }
     println!("Now compiling {}", full_path.yellow()); //prints a start message
 
@@ -35,21 +39,31 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         .spawn()
         .expect("Failed to compile");
 
+    let mut full_out = String::new();
     let stderr = child.stderr.take().unwrap();
     let reader = std::io::BufReader::new(stderr);
+    let mut has_error: bool = false;
     for line in reader.lines() { 
         match line {
             //matches the line
             Ok(content) => {
                 //if the line is fine
                 if content.contains("Compiling") {
-                    let appropriate_vasriable_name_here = content.trim().to_string();
-                    print!("\r\x1B[K{}", appropriate_vasriable_name_here.bold().purple());
+                    let appropriate_variable_name_here = content.trim().to_string();
+                    print!("\r\x1B[K{}", appropriate_variable_name_here.bold().purple());
                     let _ = std::io::stdout().flush().unwrap();
+                } else if content.contains("error") {
+                    has_error = true;
                 }
+                full_out.push_str(format!("{}\n", content).as_str());
             }
             Err(e) => println!("Error reading stdout: {}", e), //if there is an error, print the error
         }
+    }
+    if has_error {
+        println!("\r\x1B[K{}", "Compilation failed. Output will be shown below.".red());
+        println!("{}", full_out);
+        exit(0)
     }
     
     println!();
@@ -66,21 +80,13 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         return;
     }
 
-    let _ = install_to_bin(binaries.clone()); //installs the dropped binaries
+    let _ = install_to_bin(binaries.clone()); //installs the dropped binaries AND REGISTERS THEM
     println!(
         //prints an end message
         "{}",
         "The compilation and installation is finished. No error reported.".green()
     );
 
-    for binary in binaries.clone() {
-        let last_item_binary = binary.to_str().unwrap().split("/").collect::<Vec<&str>>().last().unwrap().to_string();
-        let installed_absolute_path = format!("/usr/local/bin/{}", last_item_binary);
-        println!("Found {} in {}", installed_absolute_path, installed_absolute_path.green());
-        let temp_binary: UninPackage = UninPackage { name: binary.to_str().unwrap().split('/').collect::<Vec<&str>>().last().unwrap().to_string(), paths: vec![PathBuf::from(installed_absolute_path)], change_date: String::from(time_create()), updated: false };
-        registry_write(&temp_binary);
-        println!("\n{}", temp_binary);
-    }
 }
 pub fn clean(directory: PathBuf) {
     let clean_process_cargo = Command::new("cargo")

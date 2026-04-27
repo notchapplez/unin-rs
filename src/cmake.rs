@@ -12,7 +12,7 @@ use std::{
 };
 use path_absolutize::Absolutize;
 use unin::{registry, time_create, UninPackage};
-use crate::tools::find_files_because_the_user_is_too_lazy;
+use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
     //defines the function
@@ -270,16 +270,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         //soooo
         let binaries: Vec<PathBuf> = find_files_because_the_user_is_too_lazy(build_directory); //this is a Vec<PathBuf>
         //add these fuckers to the registry
-        for binary in binaries {
-            let temp_package: UninPackage = UninPackage{
-                name: binary.to_str().unwrap().split('/').last().unwrap().to_string(),
-                paths: vec![PathBuf::from(binary.absolutize().unwrap().as_ref())],
-                change_date: time_create(),
-                updated: false
-            };
-            println!("Adding {} to registry", temp_package);
-            registry::registry_write(&temp_package);
-        }
+        let _ = install_to_bin(binaries); //this also registers the binaries to the registry
 
     }
 }

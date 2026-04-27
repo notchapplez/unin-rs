@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 use path_absolutize::Absolutize;
+use unin::{registry_write, time_create, UninPackage};
 
 #[derive(Debug)]
 struct CustomError(Vec<String>);
@@ -37,11 +38,11 @@ pub fn detect(path: String, noinstall: bool) {
         let os_filename = entry.file_name();
         let filename = os_filename.into_string().unwrap();
         match filename.as_str() {
+            "configure" => todo!(),
             "CMakeLists.txt" => compile_cmake(PathBuf::from(&path), noinstall),
             "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
             "Makefile" => todo!(),
             "build.meson" => todo!(),
-            "configure" => todo!(),
             "build.zig" => build_zig(PathBuf::from(&path), noinstall),
             _ => {}
         }
@@ -87,17 +88,12 @@ pub fn install_to_bin(executables: Vec<PathBuf>) -> Result<(), Box<dyn std::erro
         let filename = binary.file_name().unwrap().to_str().unwrap().to_owned();
         let destination = format!("/usr/local/bin/{}", filename);
 
-        let clean = Command::new("sudo")
+        let _clean = Command::new("sudo")
             .arg("rm")
             .arg(&destination)
             .arg("-f")
             .output()?
             .status;
-        if clean.success() {
-            println!("{}", "Removal of the old version is complete!".green())
-        } else {
-            println!("{}", "skipping old version removal as not present".green())
-        }
         let status = Command::new("sudo")
             .arg("cp")
             .arg(&binary)
@@ -108,6 +104,7 @@ pub fn install_to_bin(executables: Vec<PathBuf>) -> Result<(), Box<dyn std::erro
         if !status.success() {
             println!("Failed to copy binaries ");
             errors.push(format!("{}", binary.to_str().unwrap()));
+            continue;
         } else {
             if Command::new("sudo")
                 .args(["chmod", "+x", &destination])
@@ -116,8 +113,15 @@ pub fn install_to_bin(executables: Vec<PathBuf>) -> Result<(), Box<dyn std::erro
                 println!("Copied {} to {}", binary.to_str().unwrap(), destination.green());
             } else {
                 println!("Failed to copy {} {}", binary.to_str().unwrap(), destination.green());
+                errors.push(format!("{}", binary.to_str().unwrap()));
+                continue;
             }
         }
+        let last_item_binary = binary.to_str().unwrap().split("/").collect::<Vec<&str>>().last().unwrap().to_string();
+        let installed_absolute_path = format!("/usr/local/bin/{}", last_item_binary);
+        let temp_binary: UninPackage = UninPackage { name: binary.to_str().unwrap().split('/').collect::<Vec<&str>>().last().unwrap().to_string(), paths: vec![PathBuf::from(installed_absolute_path)], change_date: String::from(time_create()), updated: false };
+        registry_write(&temp_binary);
+        println!("\n{}", temp_binary);
     }
     if errors.is_empty() {
         Ok(())
@@ -128,7 +132,7 @@ pub fn install_to_bin(executables: Vec<PathBuf>) -> Result<(), Box<dyn std::erro
 pub fn sudo() -> bool {
     unsafe { libc::geteuid() == 0 }
 }
-pub fn find_executable_file_in_the_goddamn_end_folder(files: Vec<PathBuf>) -> Vec<PathBuf> {
+fn find_executable_file_in_the_goddamn_end_folder(files: Vec<PathBuf>) -> Vec<PathBuf> {
     files
         .into_iter()
         .filter(|path| {

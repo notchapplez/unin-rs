@@ -8,6 +8,9 @@ use std::fs;
 use std::fs::{OpenOptions, create_dir_all};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::process::exit;
+use clap::Command;
+use serde_json::Value;
 use time::{OffsetDateTime, PrimitiveDateTime};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -179,6 +182,42 @@ pub fn registry_exists() -> bool {
     } else {
         true //It existed and it will exist forever.as 
     }
+}
+pub fn registry_uninstall(package_name: String) {
+    let home = std::env::var("HOME").unwrap();
+    let registry_path: PathBuf = PathBuf::from(format!("{}/.unin/registry/registry.json", home));
+    let registry_json: Value = serde_json::from_str(&fs::read_to_string(registry_path.clone()).unwrap()).unwrap();
+    let mut packages: Vec<UninPackage> = serde_json::from_value(registry_json).unwrap();
+    let package_remove_queued = packages.clone().into_iter().find(|p| p.name == package_name);
+    println!("\n{}", &package_remove_queued.clone().unwrap());
+    let delete_job = std::process::Command::new("sudo")
+        .arg("rm".to_string())
+        .arg("-f")
+        .arg(&package_remove_queued.clone().unwrap().paths[0].to_str().unwrap())
+        .output()
+        .unwrap().status;
+
+    if !delete_job.success() {
+        println!("Failed to delete the file for {}", package_remove_queued.clone().unwrap().name);
+        let confirmation = dialoguer::Confirm::new()
+            .with_prompt("Do you want to delete the registry entry anyway?")
+            .interact()
+            .unwrap();
+        if confirmation {
+            packages.retain(|p| p.name != package_name);
+            let _ = std::fs::write(registry_path, serde_json::to_string(&packages).unwrap());
+            println!("Registry entry for {} deleted", package_name);
+            exit(0)
+        } else {
+            println!("Aborting");
+        }
+
+    } else {
+        packages.retain(|p| p.name != package_name);
+        let _ = std::fs::write(registry_path, serde_json::to_string(&packages).unwrap());
+        println!("Registry entry for {} deleted", package_name);
+    }
+
 }
 
 pub fn temp_test() {

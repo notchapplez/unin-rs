@@ -43,15 +43,23 @@ struct Cli {
     test: bool,
 
     #[arg(
-    long,
-    value_name = "PATH",
-    num_args = 0..=1,
-    default_missing_value = ".",
-    help = "Clean artefacts built",
-    required = false,
-    conflicts_with_all = ["setup", "noinstall", "test", "path"]
+        long,
+        num_args = 0..=1,
+        default_missing_value = ".",
+        help = "Clean artefacts built",
+        required = false,
+        conflicts_with_all = ["setup", "noinstall", "test", "path", "uninstall"]
     )]
     clean: Option<PathBuf>,
+
+    #[arg(
+        long,
+        required = false,
+        help = "Uninstall a package",
+        conflicts_with_all = ["setup", "noinstall", "test", "path", "clean"]
+
+    )]
+    uninstall: Option<String>,
 }
 
 #[derive(Clone, Debug, ValueEnum)]
@@ -82,6 +90,10 @@ fn main() {
     if cli.test {
         registry::temp_test();
         exit(0)
+    }
+    if !cli.uninstall.clone().unwrap_or_default().is_empty(){
+        registry::registry_uninstall(cli.uninstall.clone().unwrap());
+        exit(0);
     }
 
     if let Some(mode) = cli.setup {

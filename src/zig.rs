@@ -2,7 +2,7 @@ use colored::Colorize;
 use std::io::BufRead;
 use std::path::PathBuf;
 use std::process::{exit, Command};
-use crate::tools::{find_executable_file_in_the_goddamn_end_folder, find_files_because_the_user_is_too_lazy};
+use crate::tools::find_files_because_the_user_is_too_lazy;
 
 pub fn build_zig(directory: PathBuf, noinstall: bool) {
     let mut zig_build_process = Command::new("zig")
