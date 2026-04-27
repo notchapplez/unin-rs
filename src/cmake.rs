@@ -10,8 +10,7 @@ use std::{
     thread as sleeping,
     time::Duration,
 };
-use path_absolutize::Absolutize;
-use unin::{registry, time_create, UninPackage};
+use std::process::exit;
 use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
@@ -20,7 +19,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
     println!("Now configuring {}", directory.to_str().unwrap().yellow()); //prints the configuring message
     let cmake_lists_path = format!("{}/CMakeLists.txt", directory.to_str().unwrap()); //defines CMakeLists.txt path
 
-    let cmake_lists: PathBuf = PathBuf::from(&cmake_lists_path); //definnes cmake_lists as a PathBuf
+    let cmake_lists: PathBuf = PathBuf::from(&cmake_lists_path); //defines cmake_lists as a PathBuf
     let opened_file = std::fs::read_to_string(cmake_lists).unwrap(); //defined the opened file
     println!(
         //prints help for the user
@@ -36,7 +35,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
         //for loop to read the file line by line
         if line.contains("option(") {
             //if the line contains option()
-            line.split("("); //do this, split the line by ()
+            line.split("("); //to do this, split the line by ()
             let linecontentfiltered = format!("{}", line.replace("option(", "").replace(")", "")); //some formatting stuff
 
             let result: Vec<&str> = re
@@ -99,8 +98,8 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             .with_prompt("Add Arguments now. Prefix your project arguments with -D and use a space for separation, for example -DBUILD_SHARED_LIBS=ON. Other arguments will also be used, like warning flags.")
             .interact_text()
             .unwrap();
-        input = input.trim().clone().to_string();
-        println!(); //i still don't know
+        input = input.trim().to_string();
+        println!(); //I still don't know
 
         println!("{}", input); //prints the input
         let full_cmake_input = format!("{} -DCMAKE_INSTALL_PREFIX=/usr/local -Wno-dev", &input); //sets the full cmake args
@@ -115,7 +114,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
 
 fn configure(input_vec: Vec<&str>, directory: &Path) {
     //configuration function
-    println!(); //i still don't know what this does
+    println!(); //I still don't know what this does
     filesystem::create_dir_all(format!("{}/build", directory.to_str().unwrap())).unwrap(); //creates the build directory
 
     let build_dir = format!("{}/build", directory.to_str().unwrap()); //sets the path to the build directory
@@ -136,7 +135,7 @@ fn configure(input_vec: Vec<&str>, directory: &Path) {
     if !configure_cmake.status.success() {
         //if the configure command failed
         eprintln!("CMake configure failed. See the output above for more information."); //inform the user
-        std::process::exit(1); //exit the program
+        exit(1); //exit the program
     }
 }
 fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
@@ -160,7 +159,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
 
         if let Some(stdout) = make_process.stdout.take() {
             //If the stdout is not None
-            let buf_reader = std::io::BufReader::new(stdout); //opens a BufReader
+            let buf_reader = BufReader::new(stdout); //opens a BufReader
 
             for line in buf_reader.lines() {
                 //does this for every line in the stdout
@@ -178,7 +177,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
 
         if let Some(stderr) = make_process.stderr.take() {
             //if the stderr is not None
-            let buf_reader = std::io::BufReader::new(stderr); //opens another BufReader
+            let buf_reader = BufReader::new(stderr); //opens another BufReader
 
             for line in buf_reader.lines() {
                 //does this for every line in the stderr
@@ -259,7 +258,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
 
         if make_process_status.code() != Option::from(0) {
             println!("{}", "Compilation failed, not installing.".red());
-            std::process::exit(1);
+            exit(1);
         }
 
         let _make_install_process = commands::Command::new("sudo") //actually installs the project
@@ -269,18 +268,19 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             .arg(".")
             .spawn()
             .unwrap();
-        // i still need to know the binary paths
+        // I still need to know the binary paths
         //soooo
         let binaries: Vec<PathBuf> = find_files_because_the_user_is_too_lazy(build_directory); //this is a Vec<PathBuf>
         //add these fuckers to the registry
         let _ = install_to_bin(binaries); //this also registers the binaries to the registry
 
     }
+    exit(0)
 }
 
-pub fn clean(direcotory: PathBuf) {
+pub fn clean(directory: PathBuf) {
     //cleans the build directory
     println!("Cleaning artefacts built."); //notifies the user
-    filesystem::remove_dir_all(format!("{}/build", direcotory.to_str().unwrap())).unwrap(); //actually does it
+    filesystem::remove_dir_all(format!("{}/build", directory.to_str().unwrap())).unwrap(); //actually does it
 }
 //this is just a test to see how my time is getting tracked in hackatime

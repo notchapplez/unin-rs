@@ -13,7 +13,6 @@ use std::{
 };
 use std::process::exit;
 use path_absolutize::Absolutize;
-use unin::{registry_write, time_create, UninPackage};
 
 pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     let mut full_path = String::new();
@@ -86,6 +85,7 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         "{}",
         "The compilation and installation is finished. No error reported.".green()
     );
+    exit(0)
 
 }
 pub fn clean(directory: PathBuf) {

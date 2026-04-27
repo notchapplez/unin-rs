@@ -1,5 +1,4 @@
-use colored::Colorize;
-use std::{path::PathBuf, process::Command, time::Duration};
+/*use std::{path::PathBuf, process::exit};
 
 fn build(directory: PathBuf, noinstall: bool) {
     let file_content =
@@ -7,4 +6,5 @@ fn build(directory: PathBuf, noinstall: bool) {
     for line in file_content.lines() {
         println!("{line}")
     }
-}
+    exit(0)
+}*/
