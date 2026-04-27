@@ -57,7 +57,10 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
         let old_argument_read = filesystem::read_to_string(&arguments_history)
             .unwrap()
             .replace("-DCMAKE_INSTALL_PREFIX=/usr/local", "")
-            .replace("-Wno-dev", ""); //reads the file contents
+            .replace("-Wno-dev", "")
+            .trim()
+            .to_string(); //reads the file contents
+
         println!(
             "Following arguments were found as they were present in the .unin_arguments file: {}",
             old_argument_read.bold().yellow().underline()
@@ -70,7 +73,6 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             //if they do, use the old arguments and build
             let old_args = filesystem::read_to_string(&arguments_history).unwrap();
             configure(old_args.split(" ").collect(), &directory);
-
             make(directory, build_dir, noinstall);
         } else {
             //if not, ask them again
@@ -92,11 +94,12 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
         }
     } else {
         //if the file doesn't exist, ask the user for input
-        let input: String = Input::new() //input here
+        let mut input: String = Input::new() //input here
             .allow_empty(true)
             .with_prompt("Add Arguments now. Prefix your project arguments with -D and use a space for separation, for example -DBUILD_SHARED_LIBS=ON. Other arguments will also be used, like warning flags.")
             .interact_text()
             .unwrap();
+        input = input.trim().clone().to_string();
         println!(); //i still don't know
 
         println!("{}", input); //prints the input

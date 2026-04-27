@@ -42,8 +42,8 @@ pub fn detect(path: String, noinstall: bool) {
             "CMakeLists.txt" => compile_cmake(PathBuf::from(&path), noinstall),
             "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
             "Makefile" => todo!(),
-            "build.meson" => todo!(),
             "build.zig" => build_zig(PathBuf::from(&path), noinstall),
+            "build.meson" => todo!(),
             _ => {}
         }
     }

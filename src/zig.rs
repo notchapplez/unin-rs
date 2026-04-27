@@ -20,7 +20,6 @@ pub fn build_zig(directory: PathBuf, noinstall: bool) {
         for line in buf_reader.lines() {
             match line {
                 Ok(content) => {
-                    let content = content.replace('\r', "");
                     println!("{}", content.bold().purple());
                 }
                 Err(e) => println!("Error reading stdout: {}", e),
@@ -41,5 +40,6 @@ pub fn build_zig(directory: PathBuf, noinstall: bool) {
     let executables = find_files_because_the_user_is_too_lazy(out_dir.clone());
     let _  = executables.iter().for_each(|executable| {println!("Found {}", executable.to_str().unwrap().green());});
 
+    exit(0)
 
 }
