@@ -64,6 +64,7 @@ pub fn detect_clean(directory: String) {
         match filename.as_str() {
             "Cargo.toml" => crate::rust::clean(path.clone()),
             "CMakeLists.txt" => crate::cmake::clean(path.clone()),
+            "build.zig" => crate::zig::clean(path.clone()),
             _ => {}
         }
     }

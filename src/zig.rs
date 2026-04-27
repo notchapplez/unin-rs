@@ -39,3 +39,12 @@ pub fn build_zig(directory: PathBuf, noinstall: bool) {
 
     exit(0)
 }
+pub fn clean(directory: PathBuf) {
+    let target_dir = PathBuf::from(format!("{}/zig-out", directory.to_str().unwrap()));
+    let cleaning = std::fs::remove_dir_all(target_dir);
+    if cleaning.is_err() {
+        println!("Couldn't clean the zig build directory.");
+    } else {
+        println!("Zig build directory cleaned.");
+    }
+}
