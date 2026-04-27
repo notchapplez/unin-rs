@@ -1,9 +1,7 @@
 use colored::Colorize; //these are all imports
 use dialoguer::Input;
-use indicatif::ProgressBar;
-use libc::exit;
 use regex::Regex;
-use std::io::{BufRead, BufReader, Write, stdout, stderr};
+use std::io::{BufRead, BufReader, Write};
 use std::{
     fs as filesystem,
     path::{Path, PathBuf},
@@ -14,7 +12,7 @@ use std::{
 };
 use path_absolutize::Absolutize;
 use unin::{registry, time_create, UninPackage};
-use crate::tools::{find_executable_file_in_the_goddamn_end_folder, find_files_because_the_user_is_too_lazy};
+use crate::tools::find_files_because_the_user_is_too_lazy;
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
     //defines the function
@@ -118,7 +116,7 @@ fn configure(input_vec: Vec<&str>, directory: &Path) {
     filesystem::create_dir_all(format!("{}/build", directory.to_str().unwrap())).unwrap(); //creates the build directory
 
     let build_dir = format!("{}/build", directory.to_str().unwrap()); //sets the path to the build directory
-    let mut configure_cmake = commands::Command::new("cmake") //configure command, the core of this function
+    let configure_cmake = commands::Command::new("cmake") //configure command, the core of this function
         .current_dir(build_dir)
         .arg("..")
         .arg("-Wno-dev")
@@ -291,3 +289,4 @@ pub fn clean(direcotory: PathBuf) {
     println!("Cleaning artefacts built."); //notifies the user
     filesystem::remove_dir_all(format!("{}/build", direcotory.to_str().unwrap())).unwrap(); //actually does it
 }
+//this is just a test to see how my time is getting tracked in hackatime

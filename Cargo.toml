@@ -14,6 +14,7 @@ libc = "0.2.184"
 num_cpus = "1.17.0"
 os-release = "0.1.0"
 owo-colors = "4.3.0"
+path-absolutize = "3.1.1"
 regex = "1.12.3"
 serde = "1.0.228"
 serde_json = { version = "1.0.149", features = ["default"] }

@@ -1,5 +1,4 @@
 use colored::Colorize;
-use indicatif::ProgressBar;
 use std::{path::PathBuf, process::Command, time::Duration};
 
 fn build(directory: PathBuf, noinstall: bool) {

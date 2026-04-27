@@ -4,18 +4,13 @@ use crate::tools::{
     install_to_bin,
 };
 use colored::Colorize; //other imports
-use indicatif::{ProgressBar, ProgressState, ProgressStyle};
-use std::io::{BufRead, BufReader};
+use std::io::BufRead;
 use std::io::Write; // Import `Write` for `flush()` method
 use std::{
     env, fs,
     path::PathBuf,
     process::{Command, Stdio},
 };
-use std::path::Path;
-use cargo_metadata::{CargoOpt, MetadataCommand, TargetKind};
-use libc::{__c_anonymous_sockaddr_can_can_addr, mq_notify};
-use path_absolutize::Absolutize;
 use unin::{registry_write, time_create, UninPackage};
 
 pub fn compile_rust(directory: PathBuf, noinstall: bool) {
@@ -48,8 +43,8 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
             Ok(content) => {
                 //if the line is fine
                 if content.contains("Compiling") {
-                    let soos = content.trim().clone().to_string();
-                    print!("\r\x1B[K{}", soos.bold().purple());
+                    let appropriate_vasriable_name_here = content.trim().to_string();
+                    print!("\r\x1B[K{}", appropriate_vasriable_name_here.bold().purple());
                     let _ = std::io::stdout().flush().unwrap();
                 }
             }
@@ -92,43 +87,5 @@ pub fn clean(directory: PathBuf) {
         .args(["clean"])
         .current_dir(&directory)
         .output();
-    println!("{}", String::from_utf8_lossy(&clean_process_cargo.unwrap().stderr).trim().clone());
-}
-
-fn cargo_pkg_count(directory: &PathBuf) -> usize {
-    let output = Command::new("cargo")
-        .current_dir(&directory)
-        .args(&[
-            "tree",
-            "--prefix",
-            "none",
-            "-e",
-            "normal",
-            "--workspace",
-            "--all-features",
-        ])
-        .output()
-        .expect("Failed to execute cargo tree");
-
-    let mut stdout = String::from_utf8_lossy(&output.stdout);
-    let mut lines: Vec<&str> = Vec::new();
-    for line in stdout.lines() {
-        if !line.is_empty() {
-            lines.push(line);
-        } else {
-            continue;
-        }
-    }
-    let mut final_lines: Vec<&str> = Vec::new();
-    lines.dedup();
-    for line in lines {
-        if !line.contains("(proc-macro)") {
-            final_lines.push(line);
-        } else {
-            continue;
-        }
-    }
-    let lines_count = final_lines.len() + 1;
-    println!("{} packages found", lines_count);
-    return lines_count
+    println!("{}", String::from_utf8_lossy(&clean_process_cargo.unwrap().stderr).trim());
 }

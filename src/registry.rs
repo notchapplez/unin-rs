@@ -9,7 +9,6 @@ use std::fs::{OpenOptions, create_dir_all};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use time::{OffsetDateTime, PrimitiveDateTime};
-use crate::gradraw;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct UninPackage {
@@ -191,5 +190,4 @@ pub fn temp_test() {
     };
     let test: Option<UninPackage> = registry_get_package(x.name.clone());
     println!("{:?}", DebuggableOptionUninPackage(test));
-    gradraw::gradient_print("#ffa18e".to_string(), "#910983".to_string(), "charred  ")
 }

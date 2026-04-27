@@ -4,8 +4,6 @@ pub mod make;
 mod rust;
 pub mod tools;
 pub mod zig;
-pub mod gradraw;
-pub use gradraw::*;
 
 use crate::tools::*;
 use clap::{Parser, ValueEnum};
