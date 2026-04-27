@@ -106,13 +106,16 @@ pub fn registry_write(package: &UninPackage) {
     let _ = create_dir_all(registry_dir);
 
     let existing_content = fs::read_to_string(&registry_path).unwrap_or_else(|_| String::new());
-    let is_new = existing_content.trim().is_empty();
+    let mut is_new = true;
+    for line in existing_content.lines() {
+        if line.contains(package.name.trim()) {
+            is_new = false;
+            break;
+        }
+    }
 
-    let mut packages: Vec<UninPackage> = if is_new {
-        Vec::new()
-    } else {
-        serde_json::from_str(&existing_content).unwrap_or_else(|_| Vec::new())
-    };
+    let mut packages: Vec<UninPackage> = serde_json::from_str(&existing_content)
+        .unwrap_or_else(|_| Vec::new());
 
     let package_name = package.name.clone();
 
@@ -180,7 +183,7 @@ pub fn registry_exists() -> bool {
             }
         }
     } else {
-        true //It existed and it will exist forever.as 
+        true //It existed and it will exist forever.
     }
 }
 pub fn registry_uninstall(package_name: String) {
@@ -190,6 +193,15 @@ pub fn registry_uninstall(package_name: String) {
     let mut packages: Vec<UninPackage> = serde_json::from_value(registry_json).unwrap();
     let package_remove_queued = packages.clone().into_iter().find(|p| p.name == package_name);
     println!("\n{}", &package_remove_queued.clone().unwrap());
+
+    let confirmation = dialoguer::Confirm::new()
+        .with_prompt("Are you sure you want to delete this application?")
+        .interact()
+        .unwrap();
+    if !confirmation {
+        exit(0)
+    }
+
     let delete_job = std::process::Command::new("sudo")
         .arg("rm".to_string())
         .arg("-f")
@@ -214,7 +226,7 @@ pub fn registry_uninstall(package_name: String) {
 
     } else {
         packages.retain(|p| p.name != package_name);
-        let _ = std::fs::write(registry_path, serde_json::to_string(&packages).unwrap());
+        let _ = fs::write(registry_path, serde_json::to_string(&packages).unwrap());
         println!("Registry entry for {} deleted", package_name);
     }
 
@@ -222,11 +234,11 @@ pub fn registry_uninstall(package_name: String) {
 
 pub fn temp_test() {
     let x: UninPackage = UninPackage {
-        name: String::from("a"),
+        name: String::from("dev"),
         paths: vec![PathBuf::from("/root/ad"), PathBuf::from("/root/da")],
         change_date: String::from(time_create()),
         updated: false,
     };
     let test: Option<UninPackage> = registry_get_package(x.name.clone());
-    println!("{:?}", DebuggableOptionUninPackage(test));
+    println!("\n{:?}", DebuggableOptionUninPackage(test));
 }
