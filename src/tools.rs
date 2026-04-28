@@ -10,6 +10,8 @@ use std::{env, fs};
 use path_absolutize::Absolutize;
 use unin::{registry_write, time_create, UninPackage};
 
+type UniversalResult<T> = Result<T, Box<dyn std::error::Error>>;
+
 #[derive(Debug)]
 struct CustomError(Vec<String>);
 impl std::fmt::Display for CustomError {
@@ -66,7 +68,8 @@ pub fn detect_clean(directory: String) {
             "Cargo.toml" => crate::rust::clean(path.clone()),
             "CMakeLists.txt" => crate::cmake::clean(path.clone()),
             "build.zig" => crate::zig::clean(path.clone()),
-            _ => {}
+            "Makefile" => crate::make::clean(path.clone()),
+            _ => { unimplemented!() }
         }
     }
 }
@@ -84,7 +87,7 @@ pub fn find_files_because_the_user_is_too_lazy(directory: PathBuf) -> Vec<PathBu
     find_executable_file_in_the_goddamn_end_folder(paths.clone())
 }
 
-pub fn install_to_bin(executables: Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_to_bin(executables: Vec<PathBuf>) -> UniversalResult<()> {
     let mut errors: Vec<String> = Vec::new();
     for binary in executables {
         let filename = binary.file_name().unwrap().to_str().unwrap().to_owned();
