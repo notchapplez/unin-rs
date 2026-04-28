@@ -1,13 +1,8 @@
-use crate::cmake::compile_cmake;
-use crate::make::build_make;
-use crate::rust::compile_rust;
-use crate::zig::build_zig;
+use crate::{cmake::compile_cmake, make::build_make, rust::compile_rust, zig::build_zig};
+
 use colored::Colorize;
 use path_absolutize::Absolutize;
-use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
-use std::process::Command;
-use std::{env, fs};
+use std::{env, fs, os::unix::fs::PermissionsExt, path::PathBuf, process::Command};
 use unin::{UninPackage, registry_write, time_create};
 
 type UniversalResult<T> = Result<T, Box<dyn std::error::Error>>;

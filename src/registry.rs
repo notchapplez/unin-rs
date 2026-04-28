@@ -1,12 +1,10 @@
 //unPack ver 0.0.1
 
-use clap::Command;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::{Debug, Display};
-use std::fs;
-use std::fs::{OpenOptions, create_dir_all};
+use std::fs::{self, OpenOptions, create_dir_all};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -249,6 +247,5 @@ pub fn temp_test() {
         change_date: String::from(time_create()),
         updated: false,
     };
-    let test: Option<UninPackage> = registry_get_package(x.name.clone());
-    println!("\n{:?}", DebuggableOptionUninPackage(test));
+    let lol = get_registry();
 }

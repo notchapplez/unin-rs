@@ -3,15 +3,13 @@ use crate::tools::{
     find_files_because_the_user_is_too_lazy,
     install_to_bin,
 };
-use colored::Colorize; //other imports
+use colored::Colorize;
 use path_absolutize::Absolutize;
-use std::io::BufRead;
-use std::io::Write; // Import `Write` for `flush()` method
-use std::process::exit;
 use std::{
     env, fs,
+    io::{BufRead, Write},
     path::PathBuf,
-    process::{Command, Stdio},
+    process::{Command, Stdio, exit},
 };
 
 pub fn compile_rust(directory: PathBuf, noinstall: bool) {

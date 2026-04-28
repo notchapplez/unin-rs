@@ -1,8 +1,11 @@
 use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize;
 use dialoguer::console::strip_ansi_codes;
-use std::io::{BufRead, Write};
-use std::{path::PathBuf, process::exit};
+use std::{
+    io::{BufRead, Write},
+    path::PathBuf,
+    process::exit,
+};
 
 pub fn build_make(directory: PathBuf, noinstall: bool) {
     let num_cpus = num_cpus::get();

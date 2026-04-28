@@ -1,4 +1,5 @@
 pub mod cmake;
+pub mod configure;
 pub mod installer;
 pub mod make;
 mod rust;
@@ -8,10 +9,11 @@ pub mod zig;
 use crate::tools::*;
 use clap::{Parser, ValueEnum};
 use colored::Colorize;
-use std::io;
-use std::io::Write;
-use std::path::PathBuf;
-use std::process::exit;
+use std::{
+    io::{self, Write},
+    path::PathBuf,
+    process::exit,
+};
 use unin::registry;
 
 #[derive(Parser, Debug)]

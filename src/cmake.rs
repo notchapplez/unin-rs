@@ -1,14 +1,13 @@
+//these are all imports
 use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
-use colored::Colorize; //these are all imports
+use colored::Colorize;
 use dialoguer::Input;
 use regex::Regex;
-use std::io::{BufRead, BufReader, Write};
-use std::process::exit;
 use std::{
     fs as filesystem,
+    io::{BufRead, BufReader, Write},
     path::{Path, PathBuf},
-    process as commands,
-    process::Stdio,
+    process::{self as commands, Stdio, exit},
     thread as sleeping,
     time::Duration,
 };

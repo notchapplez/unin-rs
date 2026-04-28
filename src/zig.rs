@@ -1,8 +1,10 @@
 use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize;
-use std::io::{BufRead, Write};
-use std::path::PathBuf;
-use std::process::{Command, exit};
+use std::{
+    io::BufRead,
+    path::PathBuf,
+    process::{Command, exit},
+};
 
 pub fn build_zig(directory: PathBuf, noinstall: bool) {
     let mut zig_build_process = Command::new("zig")
