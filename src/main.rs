@@ -5,6 +5,7 @@ pub mod make;
 mod rust;
 pub mod tools;
 pub mod zig;
+mod make_watch;
 
 use crate::tools::*;
 use clap::{Parser, ValueEnum};
