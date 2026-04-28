@@ -65,7 +65,8 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
         );
     }
 
-    let binaries = find_files_because_the_user_is_too_lazy(directory);
+    let binaries = find_files_because_the_user_is_too_lazy(directory.clone());
+    println!("DEbug binaries: {:?}", binaries);
     if noinstall {
         println!();
         binaries.iter().for_each(|binary| {
