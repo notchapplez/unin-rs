@@ -1,4 +1,4 @@
-# unin - by notchapplez <img src="https://hackatime.hackclub.com/api/v1/badge/U08T8QD95U1/notchapplez/unin"> 
+# unin - by notchapplez
 
 ### Now you may ask – what is unin?
 #### → And I have the answer: 
@@ -14,4 +14,3 @@
 | unin --setup <full(all the languages),rust,cmake,make,go,zig,swift,haskell,d,> | Setup languages system-wide                                                                |
 | unin <"path"> (--noinstall)                                                    | Compile project at the given path, noinstall only compiles the binaries, doesn't move them |
 | unin --clean  <"path">                                                         | Clean the artefacts built                                                                  |
-
