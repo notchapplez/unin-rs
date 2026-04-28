@@ -1,16 +1,15 @@
 //unPack ver 0.0.1
 
-
+use clap::Command;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt::{Debug, Display};
 use std::fs;
 use std::fs::{OpenOptions, create_dir_all};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::exit;
-use clap::Command;
-use serde_json::Value;
 use time::{OffsetDateTime, PrimitiveDateTime};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -114,8 +113,8 @@ pub fn registry_write(package: &UninPackage) {
         }
     }
 
-    let mut packages: Vec<UninPackage> = serde_json::from_str(&existing_content)
-        .unwrap_or_else(|_| Vec::new());
+    let mut packages: Vec<UninPackage> =
+        serde_json::from_str(&existing_content).unwrap_or_else(|_| Vec::new());
 
     let package_name = package.name.clone();
 
@@ -169,13 +168,14 @@ pub fn registry_exists() -> bool {
     ));
     let registry_file = PathBuf::from(format!("{}/registry.json", registry_path.to_str().unwrap()));
     if !registry_file.exists() {
-        if !create_dir_all(&registry_path).is_ok() {  // Create the DIRECTORY, not the file path
+        if !create_dir_all(&registry_path).is_ok() {
+            // Create the DIRECTORY, not the file path
             println!("Failed to create registry for unPack ver 0.0.1");
             false //the directory didn't get created, so it doesn't exist.
         } else {
             // Create the empty registry file
             if let Ok(mut file) = std::fs::File::create(&registry_file) {
-                let _ = file.write_all(b"[]");  // Write empty JSON array
+                let _ = file.write_all(b"[]"); // Write empty JSON array
                 true //it exists now
             } else {
                 println!("Failed to create registry file");
@@ -189,9 +189,13 @@ pub fn registry_exists() -> bool {
 pub fn registry_uninstall(package_name: String) {
     let home = std::env::var("HOME").unwrap();
     let registry_path: PathBuf = PathBuf::from(format!("{}/.unin/registry/registry.json", home));
-    let registry_json: Value = serde_json::from_str(&fs::read_to_string(registry_path.clone()).unwrap()).unwrap();
+    let registry_json: Value =
+        serde_json::from_str(&fs::read_to_string(registry_path.clone()).unwrap()).unwrap();
     let mut packages: Vec<UninPackage> = serde_json::from_value(registry_json).unwrap();
-    let package_remove_queued = packages.clone().into_iter().find(|p| p.name == package_name);
+    let package_remove_queued = packages
+        .clone()
+        .into_iter()
+        .find(|p| p.name == package_name);
     println!("\n{}", &package_remove_queued.clone().unwrap());
 
     let confirmation = dialoguer::Confirm::new()
@@ -205,12 +209,20 @@ pub fn registry_uninstall(package_name: String) {
     let delete_job = std::process::Command::new("sudo")
         .arg("rm".to_string())
         .arg("-f")
-        .arg(&package_remove_queued.clone().unwrap().paths[0].to_str().unwrap())
+        .arg(
+            &package_remove_queued.clone().unwrap().paths[0]
+                .to_str()
+                .unwrap(),
+        )
         .output()
-        .unwrap().status;
+        .unwrap()
+        .status;
 
     if !delete_job.success() {
-        println!("Failed to delete the file for {}", package_remove_queued.clone().unwrap().name);
+        println!(
+            "Failed to delete the file for {}",
+            package_remove_queued.clone().unwrap().name
+        );
         let confirmation = dialoguer::Confirm::new()
             .with_prompt("Do you want to delete the registry entry anyway?")
             .interact()
@@ -223,13 +235,11 @@ pub fn registry_uninstall(package_name: String) {
         } else {
             println!("Aborting");
         }
-
     } else {
         packages.retain(|p| p.name != package_name);
         let _ = fs::write(registry_path, serde_json::to_string(&packages).unwrap());
         println!("Registry entry for {} deleted", package_name);
     }
-
 }
 
 pub fn temp_test() {

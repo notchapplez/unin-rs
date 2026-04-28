@@ -64,15 +64,15 @@ struct Cli {
 
 #[derive(Clone, Debug, ValueEnum)]
 enum SetupMode {
-    Full, //done
-    Rust, //done
-    Cmake, //done
-    Make, //not done yet
-    Go, //not done yet
-    Zig, //in progress
-    Swift, //not done yet
+    Full,    //done
+    Rust,    //done
+    Cmake,   //done
+    Make,    //not done yet
+    Go,      //not done yet
+    Zig,     //in progress
+    Swift,   //not done yet
     Haskell, //not done yet
-    D, //what the hell is this
+    D,       //what the hell is this
 }
 
 fn main() {
@@ -91,7 +91,7 @@ fn main() {
         registry::temp_test();
         exit(0)
     }
-    if !cli.uninstall.clone().unwrap_or_default().is_empty(){
+    if !cli.uninstall.clone().unwrap_or_default().is_empty() {
         registry::registry_uninstall(cli.uninstall.clone().unwrap());
         exit(0);
     }

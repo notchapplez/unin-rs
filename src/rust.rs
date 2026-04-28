@@ -4,15 +4,15 @@ use crate::tools::{
     install_to_bin,
 };
 use colored::Colorize; //other imports
+use path_absolutize::Absolutize;
 use std::io::BufRead;
 use std::io::Write; // Import `Write` for `flush()` method
+use std::process::exit;
 use std::{
     env, fs,
     path::PathBuf,
     process::{Command, Stdio},
 };
-use std::process::exit;
-use path_absolutize::Absolutize;
 
 pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     let mut full_path = String::new();
@@ -26,12 +26,7 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     println!("Now compiling {}", full_path.yellow()); //prints a start message
 
     let mut child = Command::new("cargo")
-        .args([
-            "build",
-            "--release",
-            "--color",
-            "always",
-        ])
+        .args(["build", "--release", "--color", "always"])
         .current_dir(&directory)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -42,7 +37,7 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     let stderr = child.stderr.take().unwrap();
     let reader = std::io::BufReader::new(stderr);
     let mut has_error: bool = false;
-    for line in reader.lines() { 
+    for line in reader.lines() {
         match line {
             //matches the line
             Ok(content) => {
@@ -60,11 +55,14 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         }
     }
     if has_error {
-        println!("\r\x1B[K{}", "Compilation failed. Output will be shown below.".red());
+        println!(
+            "\r\x1B[K{}",
+            "Compilation failed. Output will be shown below.".red()
+        );
         println!("{}", full_out);
         exit(0)
     }
-    
+
     println!();
     let releases_folder = PathBuf::from(format!("{}/target/release", directory.to_str().unwrap()));
     if !releases_folder.exists() {
@@ -86,12 +84,14 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         "The compilation and installation is finished. No error reported.".green()
     );
     exit(0)
-
 }
 pub fn clean(directory: PathBuf) {
     let clean_process_cargo = Command::new("cargo")
         .args(["clean"])
         .current_dir(&directory)
         .output();
-    println!("{}", String::from_utf8_lossy(&clean_process_cargo.unwrap().stderr).trim());
+    println!(
+        "{}",
+        String::from_utf8_lossy(&clean_process_cargo.unwrap().stderr).trim()
+    );
 }

@@ -1,14 +1,14 @@
 use crate::cmake::compile_cmake;
+use crate::make::build_make;
 use crate::rust::compile_rust;
 use crate::zig::build_zig;
-use crate::make::build_make;
 use colored::Colorize;
+use path_absolutize::Absolutize;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
-use path_absolutize::Absolutize;
-use unin::{registry_write, time_create, UninPackage};
+use unin::{UninPackage, registry_write, time_create};
 
 type UniversalResult<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -69,7 +69,9 @@ pub fn detect_clean(directory: String) {
             "CMakeLists.txt" => crate::cmake::clean(path.clone()),
             "build.zig" => crate::zig::clean(path.clone()),
             "Makefile" => crate::make::clean(path.clone()),
-            _ => { unimplemented!() }
+            _ => {
+                unimplemented!()
+            }
         }
     }
 }
@@ -114,17 +116,45 @@ pub fn install_to_bin(executables: Vec<PathBuf>) -> UniversalResult<()> {
             if Command::new("sudo")
                 .args(["chmod", "+x", &destination])
                 .status()
-                .is_ok() {
-                println!("Copied {} to {}", binary.to_str().unwrap(), destination.green());
+                .is_ok()
+            {
+                println!(
+                    "Copied {} to {}",
+                    binary.to_str().unwrap(),
+                    destination.green()
+                );
             } else {
-                println!("Failed to copy {} {}", binary.to_str().unwrap(), destination.green());
+                println!(
+                    "Failed to copy {} {}",
+                    binary.to_str().unwrap(),
+                    destination.green()
+                );
                 errors.push(format!("{}", binary.to_str().unwrap()));
                 continue;
             }
         }
-        let last_item_binary = binary.to_str().unwrap().split("/").collect::<Vec<&str>>().last().unwrap().to_string();
+        let last_item_binary = binary
+            .to_str()
+            .unwrap()
+            .split("/")
+            .collect::<Vec<&str>>()
+            .last()
+            .unwrap()
+            .to_string();
         let installed_absolute_path = format!("/usr/local/bin/{}", last_item_binary);
-        let temp_binary: UninPackage = UninPackage { name: binary.to_str().unwrap().split('/').collect::<Vec<&str>>().last().unwrap().to_string(), paths: vec![PathBuf::from(installed_absolute_path)], change_date: String::from(time_create()), updated: false };
+        let temp_binary: UninPackage = UninPackage {
+            name: binary
+                .to_str()
+                .unwrap()
+                .split('/')
+                .collect::<Vec<&str>>()
+                .last()
+                .unwrap()
+                .to_string(),
+            paths: vec![PathBuf::from(installed_absolute_path)],
+            change_date: String::from(time_create()),
+            updated: false,
+        };
         registry_write(&temp_binary);
         println!("\n{}", temp_binary);
     }

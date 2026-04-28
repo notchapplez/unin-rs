@@ -1,7 +1,9 @@
+use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize; //these are all imports
 use dialoguer::Input;
 use regex::Regex;
 use std::io::{BufRead, BufReader, Write};
+use std::process::exit;
 use std::{
     fs as filesystem,
     path::{Path, PathBuf},
@@ -10,8 +12,6 @@ use std::{
     thread as sleeping,
     time::Duration,
 };
-use std::process::exit;
-use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
     //defines the function
@@ -225,7 +225,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
                         //if the line is fine
                         if content.contains("Building") {
                             let mut contented = content.split("[").collect::<Vec<&str>>();
-                            contented[0] = "[" ;
+                            contented[0] = "[";
                             let contented_string = contented.iter().map(|s| *s).collect::<String>();
                             print!("\r\x1B[K{}", contented_string.bold().purple());
                             std::io::stdout().flush().unwrap();
@@ -273,7 +273,6 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         let binaries: Vec<PathBuf> = find_files_because_the_user_is_too_lazy(build_directory); //this is a Vec<PathBuf>
         //add these fuckers to the registry
         let _ = install_to_bin(binaries); //this also registers the binaries to the registry
-
     }
     exit(0)
 }
