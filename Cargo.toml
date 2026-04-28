@@ -4,18 +4,14 @@ version = "0.1.1"
 edition = "2024"
 
 [dependencies]
-cargo_metadata = "0.23.1"
 clap = { version = "4.6.0", features = ["derive"] }
-color-convert = "0.1.0"
 colored = "3.1.1"
 dialoguer = "0.12.0"
-indicatif = "0.18.4"
 libc = "0.2.184"
 num_cpus = "1.17.0"
-os-release = "0.1.0"
-owo-colors = "4.3.0"
 regex = "1.12.3"
-serde = "1.0.228"
+serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.149", features = ["default"] }
 time = { version = "0.3.47", features = ["parsing", "macros", "formatting"] }
 path-absolutize = "3.1.1"
+walkdir = "2.5.0"
