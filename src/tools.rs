@@ -1,6 +1,7 @@
 use crate::cmake::compile_cmake;
 use crate::rust::compile_rust;
 use crate::zig::build_zig;
+use crate::make::build_make;
 use colored::Colorize;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
@@ -41,7 +42,7 @@ pub fn detect(path: String, noinstall: bool) {
             "configure" => todo!(),
             "CMakeLists.txt" => compile_cmake(PathBuf::from(&path), noinstall),
             "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
-            "Makefile" => todo!(),
+            "Makefile" => build_make(PathBuf::from(&path), noinstall),
             "build.zig" => build_zig(PathBuf::from(&path), noinstall),
             "build.meson" => todo!(),
             _ => {}
