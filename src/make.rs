@@ -155,6 +155,16 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
             }
         }
     }
+    if has_error {
+        println!("{}", "\nAn error occurred while installing.".red().bold());
+        println!(
+            "Full error: \n{}",
+            full_content.trim_end().replace("error:", &"error:".red())
+        );
+        exit(0)
+    }
+    println!("Installation finished successfully.");
+    println!("You can now use the binaries in your PATH.");
 
 }
 
