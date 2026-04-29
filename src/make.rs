@@ -1,13 +1,16 @@
 use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize;
 use dialoguer::console::strip_ansi_codes;
-use std::{
-    io::{BufRead, Write},
-    path::PathBuf,
-    process::exit,
-};
+use std::{fs, io::{BufRead, Write}, path::PathBuf, process::exit};
+use path_absolutize::Absolutize;
 
 pub fn build_make(directory: PathBuf, noinstall: bool) {
+    let absolute_path = directory.absolutize().unwrap();
+    let makefile_path = PathBuf::from(format!("{}/Makefile", absolute_path.to_str().unwrap()));
+    println!("Makefile path: {}", makefile_path.to_str().unwrap().yellow());
+    let mf = makefile_lossless::Makefile::read(std::fs::File::open(makefile_path).unwrap());
+    println!("Rules in the makefile: {:?}", mf.unwrap().rules().map(|r| r.targets().collect::<Vec<String>>().join(" ")).collect::<Vec<_>>());
+
     let num_cpus = num_cpus::get();
     let mut make_process = std::process::Command::new("make")
         .args(["-j", &num_cpus.to_string()])
@@ -29,6 +32,7 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
                 || content.contains("LINK")
                 || content.contains("AR")
                 || content.contains("checking")
+                || content.contains("CCLD")
             {
                 content = strip_ansi_codes(&content.to_string().to_owned()).to_string();
                 content = content.trim().to_string();
