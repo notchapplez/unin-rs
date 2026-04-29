@@ -8,12 +8,11 @@ use std::{
     path::PathBuf,
     process::exit,
 };
-use unin::return_registry_path;
+use unin::{return_registry_path, UninPackage};
 
 pub fn build_make(directory: PathBuf, noinstall: bool) {
     let dir: PathBuf = PathBuf::from("/usr/local/bin");
     let before_install_files = find_files_because_the_user_is_too_lazy(dir);
-
 
     let absolute_path = directory.absolutize().unwrap();
     let makefile_path = PathBuf::from(format!("{}/Makefile", absolute_path.to_str().unwrap()));
@@ -131,7 +130,7 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
         prefix_argument = prefix_argument.trim().to_string();
     }
     let registry_path = return_registry_path();
-    let before_install = find_files_because_the_user_is_too_lazy(registry_path);
+    let before_install = find_files_because_the_user_is_too_lazy(registry_path.clone());
     before_install.iter().for_each(|b| println!("{}", b.to_str().unwrap()));
 
     let mut installation_process = std::process::Command::new("sudo")
@@ -163,6 +162,15 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
             }
         }
     }
+    let waiter = installation_process.wait().unwrap_or_else(|_| panic!("Couldn't wait for the make process to finish."));
+    if !waiter.success() {
+        println!("Installation failed.");
+    }
+    let after_install = find_files_because_the_user_is_too_lazy(registry_path.clone());
+    let uniques = crate::tools::only_unique(&before_install_files, &after_install);
+    
+    install_to_bin(uniques).unwrap();
+
     if has_error {
         println!("{}", "\nAn error occurred while installing.".red().bold());
         println!(
