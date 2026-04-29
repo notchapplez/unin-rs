@@ -1,15 +1,21 @@
 use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize;
 use dialoguer::console::strip_ansi_codes;
-use std::{fs, io::{BufRead, Write}, path::PathBuf, process::exit};
 use path_absolutize::Absolutize;
+use std::{
+    fs,
+    io::{BufRead, Write},
+    path::PathBuf,
+    process::exit,
+};
 
 pub fn build_make(directory: PathBuf, noinstall: bool) {
     let absolute_path = directory.absolutize().unwrap();
     let makefile_path = PathBuf::from(format!("{}/Makefile", absolute_path.to_str().unwrap()));
-    println!("Makefile path: {}", makefile_path.to_str().unwrap().yellow());
-    let mf = makefile_lossless::Makefile::read(std::fs::File::open(makefile_path).unwrap());
-    println!("Rules in the makefile: {:?}", mf.unwrap().rules().map(|r| r.targets().collect::<Vec<String>>().join(" ")).collect::<Vec<_>>());
+    println!(
+        "Makefile path: {}",
+        makefile_path.to_str().unwrap().yellow()
+    );
 
     let num_cpus = num_cpus::get();
     let mut make_process = std::process::Command::new("make")
@@ -24,6 +30,7 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
     let reader = std::io::BufReader::new(stderr);
     let mut full_content = String::new();
     let mut has_error = false;
+
     for line in reader.lines() {
         if let Ok(mut content) = line {
             let raw_content = content.clone();
@@ -33,6 +40,10 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
                 || content.contains("AR")
                 || content.contains("checking")
                 || content.contains("CCLD")
+                || content.contains("LDSHARED")
+                || content.contains("RANLIB")
+                || content.contains("Building")
+                || content.contains("Built")
             {
                 content = strip_ansi_codes(&content.to_string().to_owned()).to_string();
                 content = content.trim().to_string();
@@ -67,26 +78,84 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
             "Full error: \n{}",
             full_content.trim_end().replace("error:", &"error".red())
         );
-    }
-
-    let binaries = find_files_because_the_user_is_too_lazy(directory.clone());
-    println!("DEbug binaries: {:?}", binaries);
-    if noinstall {
-        println!();
-        binaries.iter().for_each(|binary| {
-            let bin = binary.to_string_lossy().to_string();
-            if bin.trim().is_empty() {
-                panic!("No binaries found.")
-            }
-            let test = bin.split("/").last().unwrap();
-            println!("File {} dropped.", test.yellow().underline());
-        });
         exit(0)
     }
-    install_to_bin(binaries);
+    if noinstall {
+        println!();
+        println!(
+            "As make does not provide a reliable to expose binary locations, I can't tell you the paths to the binaries. Find them yourself, idk bro."
+        );
+        println!(
+            "If you still see some file paths shown then that's a small scan, okay? Don't trust this completely."
+        );
+        let binaries = find_files_because_the_user_is_too_lazy(directory.clone());
+        binaries
+            .iter()
+            .for_each(|b| println!("{}", b.to_str().unwrap()));
+        exit(0) //process ends here, allocator frees memory
+    }
+    println!("An installation using \"make install\" will be attempted. This will not work if the Makefile does not define an \"install\" rule.");
 
-    exit(0)
-    //make install --prefix=/usr/local
+    let file_contents = fs::read_to_string(makefile_path.clone()).unwrap();
+    let mut prefix_argument = String::new();
+    let mut path_already_defined: bool = false;
+    let mut has_install_rule: bool = false;
+
+    for line in file_contents.lines() {
+        if line.contains("/usr/local/") {
+            path_already_defined = true;
+            break;
+        } else if line.contains(".PHONY : install") {
+            has_install_rule = true;
+            continue;
+        } else {
+            path_already_defined = false;
+            continue;
+        }
+    }
+    if !has_install_rule {
+        println!("The Makefile does not define an \"install\" rule. Aborting.");
+        exit(2);
+    } else {
+        println!("The Makefile defines an \"install\" rule. Continuing.");
+    }
+
+    if !path_already_defined {
+        prefix_argument = "PREFIX=/usr/local".trim().to_string();
+    } else {
+        prefix_argument = prefix_argument.trim().to_string();
+    }
+
+    let mut installation_process = std::process::Command::new("sudo")
+        .arg("make")
+        .arg(prefix_argument)
+        .arg("install")
+        .current_dir(&directory)
+        .stderr(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::null())
+        .spawn()
+        .expect("Couldn't start the make process.");
+
+    let stderr = installation_process.stderr.take().unwrap();
+    let reader = std::io::BufReader::new(stderr);
+    let mut full_content = String::new();
+    let mut has_error = false;
+    for mut line in reader.lines() {
+        if let Ok(ref mut content) = line {
+            let raw_content = content.clone();
+            if line.as_mut().unwrap().trim().contains("error") {
+                has_error = true;
+                print!("\r\x1B[KError: {}", line.expect("REASON").red());
+                std::thread::sleep(std::time::Duration::from_millis(1000));
+                full_content.push_str(&raw_content.clone());
+                full_content.push('\n');
+                continue;
+            } else {
+                print!("\r\x1B[K{}", line.expect("REASON").purple());
+            }
+        }
+    }
+
 }
 
 pub fn clean(directory: PathBuf) {

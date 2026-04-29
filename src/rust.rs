@@ -11,6 +11,7 @@ use std::{
     path::PathBuf,
     process::{Command, Stdio, exit},
 };
+use dialoguer::console::strip_ansi_codes;
 
 pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     let mut full_path = String::new();
@@ -39,12 +40,13 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
         match line {
             //matches the line
             Ok(content) => {
+                let checking_content = strip_ansi_codes(content.to_owned().as_str()).to_string();
                 //if the line is fine
-                if content.contains("Compiling") {
-                    let appropriate_variable_name_here = content.trim().to_string();
+                if checking_content.contains("Compiling") {
+                    let appropriate_variable_name_here = checking_content.trim().to_string();
                     print!("\r\x1B[K{}", appropriate_variable_name_here.bold().purple());
                     let _ = std::io::stdout().flush().unwrap();
-                } else if content.contains("error") {
+                } else if checking_content.contains("error:") {
                     has_error = true;
                 }
                 full_out.push_str(format!("{}\n", content).as_str());
