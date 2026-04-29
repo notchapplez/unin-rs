@@ -8,8 +8,13 @@ use std::{
     path::PathBuf,
     process::exit,
 };
+use unin::return_registry_path;
 
 pub fn build_make(directory: PathBuf, noinstall: bool) {
+    let dir: PathBuf = PathBuf::from("/usr/local/bin");
+    let before_install_files = find_files_because_the_user_is_too_lazy(dir);
+
+
     let absolute_path = directory.absolutize().unwrap();
     let makefile_path = PathBuf::from(format!("{}/Makefile", absolute_path.to_str().unwrap()));
     println!(
@@ -125,6 +130,9 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
     } else {
         prefix_argument = prefix_argument.trim().to_string();
     }
+    let registry_path = return_registry_path();
+    let before_install = find_files_because_the_user_is_too_lazy(registry_path);
+    before_install.iter().for_each(|b| println!("{}", b.to_str().unwrap()));
 
     let mut installation_process = std::process::Command::new("sudo")
         .arg("make")

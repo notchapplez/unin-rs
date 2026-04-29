@@ -249,3 +249,10 @@ pub fn temp_test() {
     };
     let lol = get_registry();
 }
+pub fn return_registry_path() -> PathBuf {
+    let registry_path = PathBuf::from(format!(
+        "{}/.unin/registry/registry.json",
+        std::env::var("HOME").unwrap()
+    ));
+    registry_path
+}
