@@ -1,4 +1,4 @@
-use crate::{cmake::compile_cmake, make::build_make, rust::compile_rust, zig::build_zig};
+use crate::{cmake::compile_cmake, make::build_make, rust::compile_rust, zig::build_zig, meson::start_meson};
 
 use colored::Colorize;
 use path_absolutize::Absolutize;
@@ -43,7 +43,7 @@ pub fn detect(path: String, noinstall: bool) {
             "Cargo.toml" => compile_rust(PathBuf::from(&path), noinstall),
             "Makefile" => build_make(PathBuf::from(&path), noinstall),
             "build.zig" => build_zig(PathBuf::from(&path), noinstall),
-            "build.meson" => todo!(),
+            "meson.build" => start_meson(PathBuf::from(&path), noinstall),
             _ => {}
         }
     }
