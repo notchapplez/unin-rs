@@ -5,7 +5,7 @@ use path_absolutize::Absolutize;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::{env, fs, os::unix::fs::PermissionsExt, path::PathBuf, process::Command};
-use unin::{UninPackage, registry_write, time_create};
+use unin_bin::{UninPackage, registry_write, time_create};
 
 type UniversalResult<T> = Result<T, Box<dyn std::error::Error>>;
 

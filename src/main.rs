@@ -14,7 +14,7 @@ use std::{
     path::PathBuf,
     process::exit,
 };
-use unin::registry;
+use unin_bin::registry;
 
 #[derive(Parser, Debug)]
 #[command(name = "unin", version = "0.1.0", author = "notchapplez")]
