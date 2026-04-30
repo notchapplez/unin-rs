@@ -1,14 +1,14 @@
 use colored::Colorize;
+use rand:: RngExt;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
-use std::process::{exit, Command, Stdio};
-use rand::{Rng, RngExt};
+use std::process::{Command, Stdio, exit};
 
 pub fn start_meson(directory: PathBuf, noinstall: bool) {
     let mut setup = Command::new("meson")
         .args(&["setup", "build"]) //build is the path to the build directory!
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .current_dir(directory.clone())
         .spawn();
 
@@ -54,7 +54,6 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         exit(0);
     }
 
-
     println!("\nConfiguration finished successfully.");
     let mut child = Command::new("ninja")
         .args(&["-C", "build"])
@@ -81,12 +80,28 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
             continue;
         }
     }
-    let waiter = child.unwrap().wait().unwrap();
+    let _waiter = child.unwrap().wait().unwrap();
     if has_error {
-        println!("Build using ninja failed. If you want, I can show you the output of the build process. I don't care if you want to, here it is:");
-        for line in content_full.lines() {
-            println!("{}", line);
-        }
+        println!(
+            "Build using ninja failed. If you want, I can show you the output of the build process. I don't care if you want to, here it is:"
+        );
+        full_content.split("\n").for_each(|line| println!("{}", line));
     }
+    if noinstall {
+        println!("Build finished successfully.");
+        println!("I have no idea where the binaries are. They are somewhere, go find them")
+    }
+    //i need to implement the install command
+    //exactly as i did with make, i need to check if the file provides a build : install rule
+    //if it does, i need to run the install command
+    //if it doesn't, i need to FUCK OFF
+    //and i need to refine the logic for make prolly, i guess, as
+    //i checked and this is weird:
+    // build install: phony meson-internal__install
+    // build meson-internal__install: CUSTOM_COMMAND PHONY | all
+    //  COMMAND = /usr/bin/meson install --no-rebuild
+    // build uninstall: phony meson-internal__uninstall
+    // build meson-internal__uninstall: CUSTOM_COMMAND PHONY
+
 
 }

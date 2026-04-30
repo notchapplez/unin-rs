@@ -1,4 +1,6 @@
-use crate::{cmake::compile_cmake, make::build_make, rust::compile_rust, zig::build_zig, meson::start_meson};
+use crate::{
+    cmake::compile_cmake, make::build_make, meson::start_meson, rust::compile_rust, zig::build_zig,
+};
 
 use colored::Colorize;
 use path_absolutize::Absolutize;
