@@ -19,5 +19,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.149", features = ["default"] }
 time = { version = "0.3.47", features = ["parsing", "macros", "formatting"] }
 path-absolutize = "3.1.1"
-walkdir = "2.5.0"
-makefile-lossless = "0.3.34"
+
+[[bin]]
+name = "unin"
+path = "src/main.rs"

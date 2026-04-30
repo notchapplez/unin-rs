@@ -19,6 +19,7 @@
 | unin --clean  <"path">                                                         | Clean the artefacts built                                                                  |                                                                                          
 
 ## Installation:
-### There are two ways to install unin:
-#### 1. Precompiled binaries. Head to the "releases" page and download the latest release. Open a terminal and run "chmod +x unin" to make the file executable. After that, copy the file to /usr/local/bin usint the command "sudo cp <path_to_unin_executable> /usr/local/bin".
-#### 2. Compile from source code yourself. This requires rust to be installed. Clone the repository with "git clone https://github.com/notchapplez/unin". Change the directory to the cloned repository and run cargo build --release. After that, run "sudo cp target/release/unin /usr/local/bin". Ensure /usr/local/bin is set in PATH. After that, run "unin" in the git repository directory to add the registry entry for unin.
+### There are three ways to install unin:
+#### 1. Using cargo. Run "cargo install unin-bin" in your terminal. 
+#### 2. Precompiled binaries. Head to the "releases" page and download the latest release. Open a terminal and run "chmod +x unin" to make the file executable. After that, copy the file to /usr/local/bin usint the command "sudo cp <path_to_unin_executable> /usr/local/bin".
+#### 3. Compile from source code yourself. This requires rust to be installed. Clone the repository with "git clone https://github.com/notchapplez/unin". Change the directory to the cloned repository and run cargo build --release. After that, run "sudo cp target/release/unin /usr/local/bin". Ensure /usr/local/bin is set in PATH. After that, run "unin" in the git repository directory to add the registry entry for unin.
