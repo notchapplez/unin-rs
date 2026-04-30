@@ -33,7 +33,7 @@ pub fn setup_files_lang(lang: String) {
         "cmake" => "cmake",
         "go" => get_go_package(pm),
         "zig" => "zig",
-        "swift" => "swift",
+        "swift" => get_swift_package(pm),
         "haskell" => "ghc",
         "d" => "dmd",
         _ => {
@@ -45,6 +45,12 @@ pub fn setup_files_lang(lang: String) {
     install_package(pm, package);
 }
 
+pub fn get_swift_package(pm: &str) -> &'static str {
+    match pm {
+        "pacman" => "swift-bin",
+        _ => "swift",
+    }
+}
 pub fn detect_package_manager() -> &'static str {
     let candidates = ["apt", "dnf", "yum", "zypper", "pacman", "apk"];
 
@@ -89,7 +95,7 @@ pub fn get_full_packages(pm: &str) -> Vec<&'static str> {
             "rustup",
             "go",
             "zig",
-            "swift",
+            "swift-bin",
             "ghc",
             "dmd",
             "cmake",
@@ -102,7 +108,7 @@ pub fn get_full_packages(pm: &str) -> Vec<&'static str> {
             "rustup",
             "go",
             "zig",
-            "swift",
+            "swift-bin",
             "ghc",
             "dmd",
             "cmake",
@@ -144,7 +150,7 @@ pub fn install_package(pm: &str, package: &str) {
         "dnf" => ("sudo", vec!["dnf", "install", "-y", package]),
         "yum" => ("sudo", vec!["yum", "install", "-y", package]),
         "zypper" => ("sudo", vec!["zypper", "install", "-y", package]),
-        "pacman" => ("sudo", vec!["pacman", "-S", "--noconfirm", package]),
+        "pacman" => ("sudo", vec!["yay", "-S", "--noconfirm", package]),
         "apk" => ("sudo", vec!["apk", "add", package]),
         _ => {
             println!("Unknown package manager: {}", pm);

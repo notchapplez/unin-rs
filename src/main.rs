@@ -1,7 +1,7 @@
 pub mod cmake;
-pub mod configure;
 pub mod installer;
 pub mod make;
+mod meson;
 mod rust;
 pub mod tools;
 pub mod zig;

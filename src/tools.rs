@@ -2,9 +2,9 @@ use crate::{cmake::compile_cmake, make::build_make, rust::compile_rust, zig::bui
 
 use colored::Colorize;
 use path_absolutize::Absolutize;
-use std::{env, fs, os::unix::fs::PermissionsExt, path::PathBuf, process::Command};
 use std::collections::HashSet;
 use std::hash::Hash;
+use std::{env, fs, os::unix::fs::PermissionsExt, path::PathBuf, process::Command};
 use unin::{UninPackage, registry_write, time_create};
 
 type UniversalResult<T> = Result<T, Box<dyn std::error::Error>>;
@@ -176,11 +176,11 @@ fn find_executable_file_in_the_goddamn_end_folder(files: Vec<PathBuf>) -> Vec<Pa
         })
         .collect()
 }
-pub fn only_unique<T:Eq + Hash + Clone>(first: &[T], second: &[T]) -> Vec<T> {
+pub fn only_unique<T: Eq + Hash + Clone>(first: &[T], second: &[T]) -> Vec<T> {
     let first_set: HashSet<_> = first.iter().collect();
-    second.
-        iter().
-        filter(|item| !first_set.contains(item))
+    second
+        .iter()
+        .filter(|item| !first_set.contains(item))
         .cloned()
         .collect()
 }

@@ -4,6 +4,7 @@ use crate::tools::{
     install_to_bin,
 };
 use colored::Colorize;
+use dialoguer::console::strip_ansi_codes;
 use path_absolutize::Absolutize;
 use std::{
     env, fs,
@@ -11,7 +12,6 @@ use std::{
     path::PathBuf,
     process::{Command, Stdio, exit},
 };
-use dialoguer::console::strip_ansi_codes;
 
 pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     let mut full_path = String::new();

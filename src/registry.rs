@@ -247,7 +247,7 @@ pub fn temp_test() {
         change_date: String::from(time_create()),
         updated: false,
     };
-    let lol = get_registry();
+    let _lol = get_registry();
 }
 pub fn return_registry_path() -> PathBuf {
     let registry_path = PathBuf::from(format!(

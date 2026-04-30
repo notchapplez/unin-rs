@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
     process::exit,
 };
-use unin::{return_registry_path, UninPackage};
+use unin::{UninPackage, return_registry_path};
 
 pub fn build_make(directory: PathBuf, noinstall: bool) {
     let dir: PathBuf = PathBuf::from("/usr/local/bin");
@@ -98,7 +98,9 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
             .for_each(|b| println!("{}", b.to_str().unwrap()));
         exit(0) //process ends here, allocator frees memory
     }
-    println!("An installation using \"make install\" will be attempted. This will not work if the Makefile does not define an \"install\" rule.");
+    println!(
+        "An installation using \"make install\" will be attempted. This will not work if the Makefile does not define an \"install\" rule."
+    );
 
     let file_contents = fs::read_to_string(makefile_path.clone()).unwrap();
     let mut prefix_argument = String::new();
@@ -131,7 +133,9 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
     }
     let registry_path = return_registry_path();
     let before_install = find_files_because_the_user_is_too_lazy(registry_path.clone());
-    before_install.iter().for_each(|b| println!("{}", b.to_str().unwrap()));
+    before_install
+        .iter()
+        .for_each(|b| println!("{}", b.to_str().unwrap()));
 
     let mut installation_process = std::process::Command::new("sudo")
         .arg("make")
@@ -162,13 +166,15 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
             }
         }
     }
-    let waiter = installation_process.wait().unwrap_or_else(|_| panic!("Couldn't wait for the make process to finish."));
+    let waiter = installation_process
+        .wait()
+        .unwrap_or_else(|_| panic!("Couldn't wait for the make process to finish."));
     if !waiter.success() {
         println!("Installation failed.");
     }
     let after_install = find_files_because_the_user_is_too_lazy(registry_path.clone());
     let uniques = crate::tools::only_unique(&before_install_files, &after_install);
-    
+
     install_to_bin(uniques).unwrap();
 
     if has_error {
@@ -181,7 +187,6 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
     }
     println!("Installation finished successfully.");
     println!("You can now use the binaries in your PATH.");
-
 }
 
 pub fn clean(directory: PathBuf) {
