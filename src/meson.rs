@@ -1,7 +1,7 @@
+use colored::Colorize;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::Command;
-use colored::Colorize;
 
 fn start_meson(directory: PathBuf, noinstall: bool) {
     let setup = Command::new("meson")
@@ -13,8 +13,8 @@ fn start_meson(directory: PathBuf, noinstall: bool) {
 
     let stdout = setup.unwrap().stdout.unwrap();
     let reader = BufReader::new(stdout);
-	let mut full_content = String::new();
-	let mut has_error = false;
+    let mut full_content = String::new();
+    let mut has_error = false;
     for line in reader.lines() {
         if let Ok(content) = line {
             let raw_content = content.clone();
@@ -25,18 +25,26 @@ fn start_meson(directory: PathBuf, noinstall: bool) {
                 || shc.contains("Build targets")
                 || shc.contains("header")
             {
-				println!("{}", shc);
-				full_content.push_str(&raw_content.clone());
-				continue;
-			} else if shc.contains("error") {
-				has_error = true;
-				full_content.push_str(&raw_content.clone());
-				continue;
-			}
+                println!("{}", shc);
+                full_content.push_str(&raw_content.clone());
+                continue;
+            } else if shc.contains("error") {
+                has_error = true;
+                full_content.push_str(&raw_content.clone());
+                continue;
+            }
         }
     }
-	if has_error {
-		println!("{} The full error will be printed here.", "\nAn error occurred while configuring the project.".red().bold());
-		println!("{}", full_content.trim_end().replace("error:", &"error:".red()));
-	}
+    if has_error {
+        println!(
+            "{} The full error will be printed here.",
+            "\nAn error occurred while configuring the project."
+                .red()
+                .bold()
+        );
+        println!(
+            "{}",
+            full_content.trim_end().replace("error:", &"error:".red())
+        );
+    }
 }
