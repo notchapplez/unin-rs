@@ -62,10 +62,11 @@ pub fn build_make(directory: PathBuf, noinstall: bool) {
                 content = content_vec.join(" ");
                 print!("\r\x1B[K{}", content.trim_end());
                 std::io::stdout().flush().unwrap();
-            } else if content.contains("error:") {
+            } else if content.contains("error:") || content.contains("No targets."){
                 has_error = true;
                 full_content.push_str(&raw_content.clone());
                 full_content.push('\n');
+                continue;
             }
             full_content.push_str(&raw_content.clone());
             full_content.push('\n');
