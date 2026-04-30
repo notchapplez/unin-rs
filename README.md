@@ -1,4 +1,5 @@
 # unin - by notchapplez
+<img src="https://hackatime.hackclub.com/api/v1/badge/U08T8QD95U1/notchapplez/unin">
 
 ### Now you may ask – what is unin?
 #### → And I have the answer: 
