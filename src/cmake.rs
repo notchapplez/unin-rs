@@ -145,7 +145,9 @@ fn configure(input_vec: Vec<&str>, directory: &Path) {
         eprintln!("CMake configure failed. See the output above for more information."); //inform the user
         exit(1); //exit the program
     }
-    let logger = log_to_file(directory.to_path_buf(), "configure".to_string(), String::from(configure_cmake.clone()));
+
+    let out = String::from_utf8_lossy(&configure_cmake.stdout).into_owned();
+    let logger = log_to_file(directory.to_path_buf(), "configure".to_string(), out);
     println!("\nLog for unin step \"configure\" build can be found here: {}", logger);
     drop(logger);
 
@@ -213,7 +215,8 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         } else {
             println!("{}", "Compilation finished successfully.".green());
         }
-        let logger = log_to_file(directory.to_path_buf(), "make".to_string(), String::from(make_process_status.clone()));
+        let out = String::from_utf8_lossy(&make_process_status.stdout).into_owned();
+        let logger = log_to_file(directory.to_path_buf(), "make".to_string(), out);
         println!("\nLog for unin step \"make\" build can be found here: {}", logger);
         drop(logger);
 
@@ -273,7 +276,8 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         }
 
         let waiter = make_process.wait_with_output().expect("Command isn't running.");
-        let logger = log_to_file(directory.to_path_buf(), "make".to_string(), String::from(waiter.stdout.clone()));
+        let out = String::from_utf8_lossy(&waiter.stdout).into_owned();
+        let logger = log_to_file(directory.to_path_buf(), "make".to_string(), out);
         println!("\nLog for unin step \"make\" build can be found here: {}", logger);
         drop(logger);
 
@@ -295,9 +299,9 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             println!("{}", "Installation failed.".red());
             exit(1);
         }
-        let logger = log_to_file(directory.to_path_buf(), "install".to_string(), String::from(waiter.stdout.clone()));
+        let out = String::from_utf8_lossy(&waiter.stdout).into_owned();
+        let logger = log_to_file(directory.to_path_buf(), "install".to_string(), out);
         println!("\nLog for unin step \"install\" build can be found here: {}", logger);
-
         // I still need to know the binary paths
         //soooo
         let binaries: Vec<PathBuf> = find_files_because_the_user_is_too_lazy(build_directory); //this is a Vec<PathBuf>
