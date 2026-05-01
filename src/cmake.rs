@@ -1,5 +1,5 @@
 //these are all imports
-use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};#
+use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use crate::logging::log_to_file;
 use colored::Colorize;
 use dialoguer::Input;
