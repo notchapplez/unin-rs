@@ -38,7 +38,6 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     let mut has_error: bool = false;
     for line in reader.lines() {
         match line {
-            //matches the line
             Ok(content) => {
                 let checking_content = strip_ansi_codes(content.to_owned().as_str()).to_string();
                 //if the line is fine

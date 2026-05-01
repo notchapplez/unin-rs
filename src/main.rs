@@ -5,6 +5,7 @@ mod meson;
 mod rust;
 pub mod tools;
 pub mod zig;
+mod logging;
 
 use crate::tools::*;
 use clap::{Parser, ValueEnum};

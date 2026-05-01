@@ -1,3 +1,4 @@
+use std::fs;
 use colored::Colorize;
 use rand:: RngExt;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -51,7 +52,7 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
             "{}",
             full_content.trim_end().replace("error:", &"error:".red())
         );
-        exit(0);
+        exit(1);
     }
 
     println!("\nConfiguration finished successfully.");
@@ -59,6 +60,7 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         .args(&["-C", "build"])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
+        .current_dir(directory.clone())
         .spawn();
 
     let childed = child.as_mut().unwrap().stdout.take().unwrap();
@@ -92,16 +94,50 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         println!("I have no idea where the binaries are. They are somewhere, go find them")
     }
     //i need to implement the install command
-    //exactly as i did with make, i need to check if the file provides a build : install rule
-    //if it does, i need to run the install command
-    //if it doesn't, i need to FUCK OFF
-    //and i need to refine the logic for make prolly, i guess, as
     //i checked and this is weird:
     // build install: phony meson-internal__install
     // build meson-internal__install: CUSTOM_COMMAND PHONY | all
     //  COMMAND = /usr/bin/meson install --no-rebuild
     // build uninstall: phony meson-internal__uninstall
     // build meson-internal__uninstall: CUSTOM_COMMAND PHONY
+    let file_path: String = String::from(format!("{}/build/meson-private/install.dat", directory.to_str().unwrap()).as_str());
+    let exists = fs::metadata(file_path).is_ok();
+    if !exists {
+        println!("\nThe project does not provide an \"install\" rule. This means that I cannot install the binaries. You can still find them somewhere in build/");
+        exit(1);
+    }
+    //println!("\nI found a fucking \"install\" rule. I will install the binaries for you, you piece of shit!");
 
+    let mut installer = Command::new("sudo")
+        .args(&["ninja", "-C", "build", "install"])
+        .current_dir(directory.clone())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn();
+
+    let stdout = installer.as_mut().unwrap().stdout.take().unwrap();
+    let reader = BufReader::new(stdout);
+    let mut full_content = String::new();
+    let mut has_error = false;
+    for line in reader.lines() {
+        if let Ok(content) = line {
+            let coc = content.clone();
+            if content.contains("error:") || content.contains("fatal error") || content.contains("failed") {
+                full_content.push_str(format!("{}\n", &coc).as_str());
+                has_error = true
+            } else {
+                print!("\r\x1B[K{}", content.green().bold());
+                std::io::stdout().flush().unwrap();
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+        }
+    }
+    print!("\r\x1B[K");
+
+    if has_error {
+        println!("Installation failed. Here is the full output:");
+        println!("{}", full_content);
+        exit(1);
+    }
 
 }
