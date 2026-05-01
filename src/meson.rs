@@ -4,6 +4,7 @@ use rand:: RngExt;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio, exit};
+use crate::logging::log_to_file;
 
 pub fn start_meson(directory: PathBuf, noinstall: bool) {
     let mut setup = Command::new("meson")
@@ -54,10 +55,13 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         );
         exit(1);
     }
+    let write_log = log_to_file(directory.clone(), "meson".to_string(), full_content);
+    println!("\nLog for the unin install step \"meson\" can be found here: {}", write_log);
+    drop(write_log);
 
-    println!("\nConfiguration finished successfully.");
+    let cpu_cores = num_cpus::get();
     let mut child = Command::new("ninja")
-        .args(&["-C", "build"])
+        .args(&["-C", "build", "-j", &cpu_cores.to_string()])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .current_dir(directory.clone())
@@ -71,7 +75,7 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
     let mut has_error = false;
     for line in reader.lines() {
         if let Ok(content) = line {
-            print!("\r\x1B[K{}", content.green().bold());
+            print!("\r\x1B[K{}", content.purple().bold());
             std::io::stdout().flush().unwrap();
             if content.contains("error:") {
                 has_error = true;
@@ -87,19 +91,16 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         println!(
             "Build using ninja failed. If you want, I can show you the output of the build process. I don't care if you want to, here it is:"
         );
-        full_content.split("\n").for_each(|line| println!("{}", line));
+        content_full.split("\n").for_each(|line| println!("{}", line));
     }
+    let log = log_to_file(directory.clone(), "ninja".to_string(), content_full);
+    println!("\nLog for unin step \"ninja\" build can be found here: {}", log);
+    drop(log);
+
     if noinstall {
         println!("Build finished successfully.");
         println!("I have no idea where the binaries are. They are somewhere, go find them")
     }
-    //i need to implement the install command
-    //i checked and this is weird:
-    // build install: phony meson-internal__install
-    // build meson-internal__install: CUSTOM_COMMAND PHONY | all
-    //  COMMAND = /usr/bin/meson install --no-rebuild
-    // build uninstall: phony meson-internal__uninstall
-    // build meson-internal__uninstall: CUSTOM_COMMAND PHONY
     let file_path: String = String::from(format!("{}/build/meson-private/install.dat", directory.to_str().unwrap()).as_str());
     let exists = fs::metadata(file_path).is_ok();
     if !exists {
@@ -126,18 +127,21 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
                 full_content.push_str(format!("{}\n", &coc).as_str());
                 has_error = true
             } else {
-                print!("\r\x1B[K{}", content.green().bold());
+                print!("\r\x1B[K{}", content.purple().bold());
                 std::io::stdout().flush().unwrap();
                 std::thread::sleep(std::time::Duration::from_millis(10));
+                full_content.push_str(format!("{}\n", &coc).as_str());
             }
         }
     }
-    print!("\r\x1B[K");
+
+    let log = log_to_file(directory.clone(), "install".to_string(), full_content.clone());
+    println!("\nLog for unin step \"install\" can be found here: {}", log);
+    drop(log);
 
     if has_error {
         println!("Installation failed. Here is the full output:");
         println!("{}", full_content);
         exit(1);
     }
-
 }
