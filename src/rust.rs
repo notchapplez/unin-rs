@@ -22,6 +22,7 @@ pub fn compile_rust(directory: PathBuf, noinstall: bool) {
     } else {
         full_path = String::from(directory.absolutize().unwrap().to_str().unwrap());
     }
+
     println!("Now compiling {}", full_path.yellow()); //prints a start message
 
     let mut child = Command::new("cargo")

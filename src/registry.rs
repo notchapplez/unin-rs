@@ -82,7 +82,7 @@ pub fn time_read() -> PrimitiveDateTime {
         String::from(std::env::var("HOME").unwrap_or_else(|_| "/root/".to_string()))
     ));
     let registry_file = PathBuf::from(format!("{}/registry.json", registry_path.to_str().unwrap()));
-    let data = std::fs::read_to_string(registry_file).unwrap();
+    let data = fs::read_to_string(registry_file).unwrap();
     let p: UninPackage =
         serde_json::from_str(&data).unwrap_or_else(|e| panic!("Shit happened: {:?}", e));
     let time_string: String = p.change_date.clone();
@@ -172,7 +172,7 @@ pub fn registry_exists() -> bool {
             false //the directory didn't get created, so it doesn't exist.
         } else {
             // Create the empty registry file
-            if let Ok(mut file) = std::fs::File::create(&registry_file) {
+            if let Ok(mut file) = fs::File::create(&registry_file) {
                 let _ = file.write_all(b"[]"); // Write empty JSON array
                 true //it exists now
             } else {
@@ -227,7 +227,7 @@ pub fn registry_uninstall(package_name: String) {
             .unwrap();
         if confirmation {
             packages.retain(|p| p.name != package_name);
-            let _ = std::fs::write(registry_path, serde_json::to_string(&packages).unwrap());
+            let _ = fs::write(registry_path, serde_json::to_string(&packages).unwrap());
             println!("Registry entry for {} deleted", package_name);
             exit(0)
         } else {
@@ -241,7 +241,7 @@ pub fn registry_uninstall(package_name: String) {
 }
 
 pub fn temp_test() {
-    let x: UninPackage = UninPackage {
+    let _x: UninPackage = UninPackage {
         name: String::from("dev"),
         paths: vec![PathBuf::from("/root/ad"), PathBuf::from("/root/da")],
         change_date: String::from(time_create()),

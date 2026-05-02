@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
     process::exit,
 };
-use unin_bin::{UninPackage, return_registry_path};
+use unin_bin::return_registry_path;
 
 pub fn build_make(directory: PathBuf, noinstall: bool) {
     let dir: PathBuf = PathBuf::from("/usr/local/bin");
