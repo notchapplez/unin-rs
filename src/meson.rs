@@ -1,12 +1,11 @@
 use crate::logging::log_to_file;
+use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize;
 use rand::RngExt;
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio, exit};
-use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
-
 
 pub fn start_meson(directory: PathBuf, noinstall: bool) {
     let mut setup = Command::new("meson")
@@ -169,7 +168,9 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         exit(1);
     }
     let build_dir = format!("{}/build", directory.to_str().unwrap());
-    let installer = install_to_bin(find_files_because_the_user_is_too_lazy(PathBuf::from(build_dir)));
+    let installer = install_to_bin(find_files_because_the_user_is_too_lazy(PathBuf::from(
+        build_dir,
+    )));
     if installer.is_err() {
         println!("Installation failed. Here is the full output:");
         println!("{}", installer.unwrap_err());

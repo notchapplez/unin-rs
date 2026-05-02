@@ -2,6 +2,7 @@ use crate::{
     cmake::compile_cmake, make::build_make, meson::start_meson, rust::compile_rust, zig::build_zig,
 };
 
+use crate::go::compile_go;
 use colored::Colorize;
 use path_absolutize::Absolutize;
 use std::collections::HashSet;
@@ -46,6 +47,7 @@ pub fn detect(path: String, noinstall: bool) {
             "Makefile" => build_make(PathBuf::from(&path), noinstall),
             "build.zig" => build_zig(PathBuf::from(&path), noinstall),
             "meson.build" => start_meson(PathBuf::from(&path), noinstall),
+            "go.mod" => compile_go(PathBuf::from(&path), noinstall),
             _ => {}
         }
     }

@@ -1,4 +1,6 @@
 pub mod cmake;
+mod comms;
+mod go;
 pub mod installer;
 mod logging;
 pub mod make;
@@ -6,7 +8,6 @@ mod meson;
 mod rust;
 pub mod tools;
 pub mod zig;
-mod comms;
 
 use crate::tools::*;
 use clap::{Parser, ValueEnum};
