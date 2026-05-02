@@ -2,7 +2,7 @@
 use crate::logging::log_to_file;
 use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize;
-use dialoguer::Input;
+use dialoguer::{Confirm, Input};
 use regex::Regex;
 use std::{
     fs as filesystem,
@@ -57,18 +57,19 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             .replace("-DCMAKE_INSTALL_PREFIX=/usr/local", "")
             .replace("-Wno-dev", "")
             .trim()
-            .to_string(); //reads the file contents
+            .to_string(); //reads the file contents, obviously
 
         println!(
             "Following arguments were found as they were present in the .unin_arguments file: {}",
             old_argument_read.bold().yellow().underline()
         ); //notifies the user of the file
-        let check_user_continue_old_args: String = Input::new() //asks the user if they want to use the old arguments
+
+        let check_user_continue_old_args: bool = Confirm::new() //asks the user if they want to use the old arguments
             .with_prompt("Do you want to use the already used, cached arguments? (y/n)")
-            .interact_text()
+            .interact()
             .unwrap();
 
-        if check_user_continue_old_args.trim() == "y" {
+        if check_user_continue_old_args {
             //if they do, use the old arguments and build
             let old_args = filesystem::read_to_string(&arguments_history).unwrap();
 
@@ -83,7 +84,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
                 .interact_text()
                 .unwrap();
 
-            println!(); //i dont know
+            println!(); //i dont know, it's just here
 
             let full_cmake_input = format!("{} -DCMAKE_INSTALL_PREFIX=/usr/local -Wno-dev", &input); //adds the -DCMAKE_INSTALL_PREFIX=/usr/local to the input
             let input_vec: Vec<&str> = input.split(' ').collect(); //splits the input into a vector
@@ -93,7 +94,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             filesystem::remove_file(&arguments_history).unwrap(); //removes the old arguments file
             filesystem::write(arguments_history, full_cmake_input.clone()).unwrap(); //creates a new arguments file with the new input
 
-            make(directory, build_dir, noinstall); //builds the project
+            make(directory, build_dir, noinstall); //builds the project, what else would it do?
         }
     } else {
         //if the file doesn't exist, ask the user for input
@@ -105,7 +106,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
         input = input.trim().to_string();
         println!(); //I still don't know
 
-        println!("{}", input); //prints the input
+        println!("{}", input); //prints the input, as you can see (you fuckhead)
         let full_cmake_input = format!("{} -DCMAKE_INSTALL_PREFIX=/usr/local -Wno-dev", &input); //sets the full cmake args
         let input_vec: Vec<&str> = full_cmake_input.split(" ").collect(); //splits the input into a vector
         filesystem::write(arguments_history, full_cmake_input.clone()).unwrap(); //writes the input to the file

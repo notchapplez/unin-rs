@@ -72,12 +72,12 @@ enum SetupMode {
     Full,    //done
     Rust,    //done
     Cmake,   //done
-    Make,    //not done yet
-    Go,      //not done yet
-    Zig,     //in progress
-    Swift,   //not done yet
-    Haskell, //not done yet
-    D,       //what the hell is this
+    Make,    //done, hell yeah
+    Go,      //wait i think i did this -- yeah i did
+    Zig,     //somewhat done i guess
+    Swift,   //not done yet (todo!())
+    Haskell, //not done yet (todo!())
+    D,       //what the hell is this anyway (todo!())
 }
 
 fn main() {

@@ -78,14 +78,12 @@ pub fn detect_clean(directory: String) {
 }
 ///universal finder
 pub fn find_files_because_the_user_is_too_lazy(directory: PathBuf) -> Vec<PathBuf> {
-    let releases_folder = format!("{}", directory.to_str().unwrap());
+    let temp = directory.canonicalize().unwrap();
     let mut paths: Vec<PathBuf> = vec![];
-    for file in fs::read_dir(PathBuf::from(releases_folder)).unwrap() {
+    for file in fs::read_dir(PathBuf::from(temp.clone())).unwrap() {
         let file_path = file.unwrap().path();
         paths.push(file_path);
     }
-
-    //println!("{:?} found", paths);
 
     find_executable_file_in_the_goddamn_end_folder(paths.clone())
 }

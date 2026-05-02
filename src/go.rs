@@ -1,10 +1,9 @@
-use clap::builder::Str;
+use crate::tools::find_files_because_the_user_is_too_lazy;
 use colored::Colorize;
 use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
-use std::sync::mpsc::{Receiver, Sender};
+use std::process::{exit, Command, Stdio};
 
 pub fn compile_go(directory: PathBuf, noinstall: bool) {
     use std::io::{BufRead, BufReader, Write};
@@ -13,7 +12,7 @@ pub fn compile_go(directory: PathBuf, noinstall: bool) {
     use std::thread;
 
     let mut child = Command::new("go")
-        .args(&["build", "-o", "unin_built_temp/mybin"]) // specify file
+        .args(&["build", "-o", "unin_built_temp/"]) // don't specify no file for ****'s sake
         .current_dir(&directory)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -62,5 +61,24 @@ pub fn compile_go(directory: PathBuf, noinstall: bool) {
     let status = child.wait().expect("wait failed");
     if !status.success() {
         eprintln!("process exited with {}", status);
+    }
+
+    if noinstall {
+        println!(
+            "{}",
+            "Skipping installation. Binaries can be found in unin_built_temp/"
+                .yellow()
+                .underline()
+        );
+        let test = PathBuf::from(format!(
+            "{}/unin_built_temp/",
+            directory.to_str().clone().unwrap()
+        ));
+		println!();
+		println!("I found some files, here they are:");
+        find_files_because_the_user_is_too_lazy(test)
+            .iter()
+            .for_each(|x| println!("{}", x.to_str().unwrap()));
+		exit(0)
     }
 }
