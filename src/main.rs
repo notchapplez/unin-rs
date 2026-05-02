@@ -1,11 +1,11 @@
 pub mod cmake;
 pub mod installer;
+mod logging;
 pub mod make;
 mod meson;
 mod rust;
 pub mod tools;
 pub mod zig;
-mod logging;
 
 use crate::tools::*;
 use clap::{Parser, ValueEnum};

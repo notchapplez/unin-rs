@@ -1,6 +1,6 @@
 //these are all imports
-use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use crate::logging::log_to_file;
+use crate::tools::{find_files_because_the_user_is_too_lazy, install_to_bin};
 use colored::Colorize;
 use dialoguer::Input;
 use regex::Regex;
@@ -12,8 +12,6 @@ use std::{
     thread as sleeping,
     time::Duration,
 };
-use libc::wait;
-
 pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
     //defines the function
     let build_dir: PathBuf = PathBuf::from(format!("{}/build", directory.to_str().unwrap()));
@@ -30,16 +28,16 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
         "Default value".bold().red()
     );
     sleeping::sleep(Duration::from_millis(500)); //waits for the user to read the help
-    let re = Regex::new(r#""[^"]*"|\S+"#).unwrap(); //sets the regex pattern
+    let regex = Regex::new(r#""[^"]*"|\S+"#).unwrap(); //sets the regex pattern
 
     for line in opened_file.lines() {
-        //for loop to read the file line by line
+        //"for" loop to read the file line by line
         if line.contains("option(") {
             //if the line contains option()
             line.split("("); //to do this, split the line by ()
             let linecontentfiltered = format!("{}", line.replace("option(", "").replace(")", "")); //some formatting stuff
 
-            let result: Vec<&str> = re
+            let result: Vec<&str> = regex
                 .find_iter(linecontentfiltered.as_str())
                 .map(|m| m.as_str())
                 .collect(); //collects the result by matching against the regex
@@ -69,6 +67,7 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             .with_prompt("Do you want to use the already used, cached arguments? (y/n)")
             .interact_text()
             .unwrap();
+
         if check_user_continue_old_args.trim() == "y" {
             //if they do, use the old arguments and build
             let old_args = filesystem::read_to_string(&arguments_history).unwrap();
@@ -76,7 +75,6 @@ pub fn compile_cmake(directory: PathBuf, noinstall: bool) {
             configure(old_args.split(" ").collect(), &directory);
 
             make(directory, build_dir, noinstall);
-
         } else {
             //if not, ask them again
             let input: String = Input::new() //get their input to sell to companies without their consent /j
@@ -133,7 +131,6 @@ fn configure(input_vec: Vec<&str>, directory: &Path) {
         .output()
         .expect("Failed to configure");
 
-
     print!(
         "{}",
         String::from_utf8_lossy(&configure_cmake.stdout).yellow()
@@ -148,9 +145,11 @@ fn configure(input_vec: Vec<&str>, directory: &Path) {
 
     let out = String::from_utf8_lossy(&configure_cmake.stdout).into_owned();
     let logger = log_to_file(directory.to_path_buf(), "configure".to_string(), out);
-    println!("\nLog for unin step \"configure\" build can be found here: {}", logger);
+    println!(
+        "\nLog for unin step \"configure\" build can be found here: {}",
+        logger
+    );
     drop(logger);
-
 }
 fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
     //define the building function
@@ -207,7 +206,9 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             }
         }
 
-        let make_process_status = make_process.wait_with_output().expect("Command isn't running."); //waits for the command to finish
+        let make_process_status = make_process
+            .wait_with_output()
+            .expect("Command isn't running."); //waits for the command to finish
 
         if make_process_status.status.code() != Option::from(0) {
             println!("{}", "Compilation failed.".red());
@@ -217,9 +218,11 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         }
         let out = String::from_utf8_lossy(&make_process_status.stdout).into_owned();
         let logger = log_to_file(directory.to_path_buf(), "make".to_string(), out);
-        println!("\nLog for unin step \"make\" build can be found here: {}", logger);
+        println!(
+            "\nLog for unin step \"make\" build can be found here: {}",
+            logger
+        );
         drop(logger);
-
     } else {
         //if the user wants to build and install
         let mut make_process = commands::Command::new("cmake") //starts compiling
@@ -254,7 +257,6 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
                     Err(e) => println!("Error reading stdout: {}", e), //if there is an error, print the error
                 }
             }
-
         }
 
         if let Some(stderr) = make_process.stderr.take() {
@@ -275,10 +277,15 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             }
         }
 
-        let waiter = make_process.wait_with_output().expect("Command isn't running.");
+        let waiter = make_process
+            .wait_with_output()
+            .expect("Command isn't running.");
         let out = String::from_utf8_lossy(&waiter.stdout).into_owned();
         let logger = log_to_file(directory.to_path_buf(), "make".to_string(), out);
-        println!("\nLog for unin step \"make\" build can be found here: {}", logger);
+        println!(
+            "\nLog for unin step \"make\" build can be found here: {}",
+            logger
+        );
         drop(logger);
 
         if waiter.status.code() != Option::from(0) {
@@ -286,7 +293,7 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
             exit(1);
         }
 
-        let mut make_install_process = commands::Command::new("sudo") //actually installs the project
+        let make_install_process = commands::Command::new("sudo") //actually installs the project
             .current_dir(&build_directory)
             .arg("cmake")
             .arg("--install")
@@ -301,7 +308,10 @@ fn make(directory: PathBuf, build_directory: PathBuf, noinstall: bool) {
         }
         let out = String::from_utf8_lossy(&waiter.stdout).into_owned();
         let logger = log_to_file(directory.to_path_buf(), "install".to_string(), out);
-        println!("\nLog for unin step \"install\" build can be found here: {}", logger);
+        println!(
+            "\nLog for unin step \"install\" build can be found here: {}",
+            logger
+        );
         // I still need to know the binary paths
         //soooo
         let binaries: Vec<PathBuf> = find_files_because_the_user_is_too_lazy(build_directory); //this is a Vec<PathBuf>

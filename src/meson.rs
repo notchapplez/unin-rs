@@ -1,10 +1,10 @@
-use std::fs;
+use crate::logging::log_to_file;
 use colored::Colorize;
-use rand:: RngExt;
+use rand::RngExt;
+use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio, exit};
-use crate::logging::log_to_file;
 
 pub fn start_meson(directory: PathBuf, noinstall: bool) {
     let mut setup = Command::new("meson")
@@ -56,7 +56,10 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         exit(1);
     }
     let write_log = log_to_file(directory.clone(), "meson".to_string(), full_content);
-    println!("\nLog for the unin install step \"meson\" can be found here: {}", write_log);
+    println!(
+        "\nLog for the unin install step \"meson\" can be found here: {}",
+        write_log
+    );
     drop(write_log);
 
     let cpu_cores = num_cpus::get();
@@ -91,20 +94,33 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         println!(
             "Build using ninja failed. If you want, I can show you the output of the build process. I don't care if you want to, here it is:"
         );
-        content_full.split("\n").for_each(|line| println!("{}", line));
+        content_full
+            .split("\n")
+            .for_each(|line| println!("{}", line));
     }
     let log = log_to_file(directory.clone(), "ninja".to_string(), content_full);
-    println!("\nLog for unin step \"ninja\" build can be found here: {}", log);
+    println!(
+        "\nLog for unin step \"ninja\" build can be found here: {}",
+        log
+    );
     drop(log);
 
     if noinstall {
         println!("Build finished successfully.");
         println!("I have no idea where the binaries are. They are somewhere, go find them")
     }
-    let file_path: String = String::from(format!("{}/build/meson-private/install.dat", directory.to_str().unwrap()).as_str());
+    let file_path: String = String::from(
+        format!(
+            "{}/build/meson-private/install.dat",
+            directory.to_str().unwrap()
+        )
+        .as_str(),
+    );
     let exists = fs::metadata(file_path).is_ok();
     if !exists {
-        println!("\nThe project does not provide an \"install\" rule. This means that I cannot install the binaries. You can still find them somewhere in build/");
+        println!(
+            "\nThe project does not provide an \"install\" rule. This means that I cannot install the binaries. You can still find them somewhere in build/"
+        );
         exit(1);
     }
     //println!("\nI found a fucking \"install\" rule. I will install the binaries for you, you piece of shit!");
@@ -123,7 +139,10 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
     for line in reader.lines() {
         if let Ok(content) = line {
             let coc = content.clone();
-            if content.contains("error:") || content.contains("fatal error") || content.contains("failed") {
+            if content.contains("error:")
+                || content.contains("fatal error")
+                || content.contains("failed")
+            {
                 full_content.push_str(format!("{}\n", &coc).as_str());
                 has_error = true
             } else {
@@ -135,7 +154,11 @@ pub fn start_meson(directory: PathBuf, noinstall: bool) {
         }
     }
 
-    let log = log_to_file(directory.clone(), "install".to_string(), full_content.clone());
+    let log = log_to_file(
+        directory.clone(),
+        "install".to_string(),
+        full_content.clone(),
+    );
     println!("\nLog for unin step \"install\" can be found here: {}", log);
     drop(log);
 
